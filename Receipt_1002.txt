@@ -1,0 +1,15 @@
+***********************************
+      OFFICIAL ORDER RECEIPT       
+***********************************
+Order ID : 1002
+Date     : 18/6/2026
+Status   : Jayden
+-----------------------------------
+Total Due: RM26
+Est. Time: 30 mins
+Rider    : Jayden
+Deliver To:
+Melaka
+
+***********************************
+    Thank you for your order!      
