@@ -132,6 +132,14 @@ public:
     
     void saveToFile();
     void loadFromFile();
+
+    // ===== MEMBER 4: Analytics, Sorting & Reporting =====
+    int countOrders();                                  // count active orders
+    void analyticsMenu();                               // sub-menu for sort/search/report
+    void runSortReport(int sortKey, bool descending);   // copy to array + Merge Sort + display
+    void runSearchByID();                               // sort by ID + Binary Search one order
+    void generateSummaryReport();                       // build stats + save Summary.txt
+    void displaySavedSummary();                         // read Summary.txt back and display
 };
 
 class UndoStack {
@@ -558,7 +566,7 @@ int main() {
 
     int choice = 0;
 
-    while (choice != 11) {
+    while (choice != 12) {
         cout << "\n[ MAIN MENU ]\n";
         cout << "1. Add a Standard Order\n";
         cout << "2. Add a VIP Priority Order\n";
@@ -570,7 +578,8 @@ int main() {
         cout << "8. Delete an Order\n";
         cout << "9. View Undo History (Recycle Bin)\n";
         cout << "10. Undo Last Deletion\n";
-        cout << "11. Save and Exit\n";
+        cout << "11. Analytics & Reports (Sort / Search / Summary)\n";
+        cout << "12. Save and Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -672,6 +681,9 @@ int main() {
             }
 
         } else if (choice == 11) {
+            activeList.analyticsMenu();
+
+        } else if (choice == 12) {
             activeList.saveToFile();
             cout << "Exiting system. Data successfully saved. Goodbye!\n";
         } else {
@@ -680,4 +692,305 @@ int main() {
     }
 
     return 0;
+}
+
+// ==========================================
+// 7. MEMBER 4: ANALYTICS, SORTING & REPORTING
+//    (Merge Sort + Binary Search + Summary.txt)
+// ==========================================
+
+// Decide the order of two orders for the chosen key and direction.
+// Returns true if 'a' should be placed BEFORE 'b'.
+bool compareOrders(DeliveryOrder* a, DeliveryOrder* b, int sortKey, bool descending) {
+    double valA, valB;
+    if (sortKey == 1) {            // 1 = compare by total price
+        valA = a->getTotalPrice();
+        valB = b->getTotalPrice();
+    } else if (sortKey == 2) {     // 2 = compare by delivery time
+        valA = (double)a->getDeliveryTime();
+        valB = (double)b->getDeliveryTime();
+    } else {                       // 3 = compare by order ID
+        valA = (double)a->getOrderID();
+        valB = (double)b->getOrderID();
+    }
+
+    if (descending) {
+        return valA >= valB;       // larger value comes first (highest / longest)
+    } else {
+        return valA <= valB;       // smaller value comes first (lowest / earliest)
+    }
+}
+
+// Merge two already-sorted halves of the array back into sorted order.
+void merge(DeliveryOrder** arr, int left, int mid, int right, int sortKey, bool descending) {
+    int n1 = mid - left + 1;       // number of items in the left half
+    int n2 = right - mid;          // number of items in the right half
+
+    DeliveryOrder** leftArr = new DeliveryOrder*[n1];   // temp storage for the left half
+    DeliveryOrder** rightArr = new DeliveryOrder*[n2];  // temp storage for the right half
+
+    for (int i = 0; i < n1; i++) leftArr[i] = arr[left + i];      // fill the left temp array
+    for (int j = 0; j < n2; j++) rightArr[j] = arr[mid + 1 + j];  // fill the right temp array
+
+    int i = 0, j = 0, k = left;    // i scans left, j scans right, k writes back to arr
+    while (i < n1 && j < n2) {     // while both halves still have items
+        if (compareOrders(leftArr[i], rightArr[j], sortKey, descending)) {
+            arr[k] = leftArr[i];   // the left item wins this position
+            i++;
+        } else {
+            arr[k] = rightArr[j];  // the right item wins this position
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) { arr[k] = leftArr[i]; i++; k++; }    // copy any leftovers from the left half
+    while (j < n2) { arr[k] = rightArr[j]; j++; k++; }   // copy any leftovers from the right half
+
+    delete[] leftArr;              // free the temporary left array
+    delete[] rightArr;             // free the temporary right array
+}
+
+// Merge Sort: recursively split the array, then merge the sorted pieces.
+void mergeSort(DeliveryOrder** arr, int left, int right, int sortKey, bool descending) {
+    if (left < right) {                            // stop when the piece has 0 or 1 item
+        int mid = left + (right - left) / 2;       // safe midpoint (avoids overflow)
+        mergeSort(arr, left, mid, sortKey, descending);        // sort the left half
+        mergeSort(arr, mid + 1, right, sortKey, descending);   // sort the right half
+        merge(arr, left, mid, right, sortKey, descending);     // merge the two sorted halves
+    }
+}
+
+// Binary Search on an array already sorted ascending by Order ID.
+// Returns the index of the match, or -1 if the ID is not present.
+int binarySearchByID(DeliveryOrder** arr, int n, int targetID) {
+    int low = 0;                   // lower bound of the search window
+    int high = n - 1;              // upper bound of the search window
+
+    while (low <= high) {          // keep going while the window is valid
+        int mid = low + (high - low) / 2;     // middle index of the window
+        int midID = arr[mid]->getOrderID();   // the ID sitting at the middle
+
+        if (midID == targetID) {
+            return mid;            // exact match found
+        } else if (midID < targetID) {
+            low = mid + 1;         // search the right half
+        } else {
+            high = mid - 1;        // search the left half
+        }
+    }
+    return -1;                     // target ID was never found
+}
+
+// Count how many orders are currently in the active list.
+int ActiveOrderList::countOrders() {
+    int count = 0;                 // running counter
+    OrderNode* temp = head;        // begin at the head of the list
+    while (temp != NULL) {         // walk to the end of the list
+        count++;                   // one more order counted
+        temp = temp->next;         // step to the next node
+    }
+    return count;                  // give back the total
+}
+
+// Copy all orders into an array, run Merge Sort, then print them in order.
+void ActiveOrderList::runSortReport(int sortKey, bool descending) {
+    try {
+        int n = countOrders();                 // find out how many orders we have
+        if (n == 0) {                          // guard against an empty list
+            throw "No active orders available to sort.";
+        }
+
+        DeliveryOrder** arr = new DeliveryOrder*[n];   // dynamic array of order pointers
+        OrderNode* temp = head;                // start copying from the head
+        int i = 0;                             // array write index
+        while (temp != NULL) {                 // copy every node's pointer into the array
+            arr[i] = temp->data;               // store the pointer (shallow copy, shared object)
+            i++;
+            temp = temp->next;
+        }
+
+        mergeSort(arr, 0, n - 1, sortKey, descending);   // sort the whole array
+
+        string keyName;                        // human-readable name of the sort field
+        if (sortKey == 1) keyName = "Total Price";
+        else if (sortKey == 2) keyName = "Delivery Time";
+        else keyName = "Order ID";
+        string dir = descending ? "Highest to Lowest" : "Lowest to Highest";   // direction label
+
+        cout << "\n========== SORTED ORDERS (" << keyName << " : " << dir << ") ==========\n";
+        for (int j = 0; j < n; j++) {          // walk the sorted array
+            arr[j]->displayOrder();            // reuse the existing display method
+        }
+        cout << "=====================================================================\n";
+
+        delete[] arr;                          // free ONLY the pointer array, not the orders
+    } catch (const char* msg) {                // catch our thrown text message
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// Sort by Order ID, then use Binary Search to fetch one order instantly.
+void ActiveOrderList::runSearchByID() {
+    try {
+        int n = countOrders();                 // how many orders exist
+        if (n == 0) {                          // nothing to search
+            throw "No active orders available to search.";
+        }
+
+        DeliveryOrder** arr = new DeliveryOrder*[n];   // dynamic pointer array
+        OrderNode* temp = head;
+        int i = 0;
+        while (temp != NULL) {                 // copy every order pointer into the array
+            arr[i] = temp->data;
+            i++;
+            temp = temp->next;
+        }
+
+        mergeSort(arr, 0, n - 1, 3, false);    // Binary Search needs the data sorted by ID first
+
+        int targetID;                          // the ID the user is looking for
+        cout << "Enter the Order ID you want to find: ";
+        cin >> targetID;                       // read the target ID
+
+        int foundIndex = binarySearchByID(arr, n, targetID);   // run the search
+
+        if (foundIndex == -1) {                // -1 means not found
+            cout << "[!] Order ID " << targetID << " was not found.\n";
+        } else {
+            cout << "\n[System] Order located instantly with Binary Search:\n";
+            arr[foundIndex]->displayOrder();   // show the matching order
+        }
+
+        delete[] arr;                          // free the pointer array only
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// Read Summary.txt from disk and print it to the screen.
+void ActiveOrderList::displaySavedSummary() {
+    try {
+        ifstream inFile("Summary.txt");        // open the saved report for reading
+        if (!inFile) {                         // file missing or cannot be opened
+            throw "Summary.txt not found. Please generate the report first.";
+        }
+
+        cout << "\n----- RETRIEVED FROM Summary.txt -----\n";
+        string line;                           // holds one line at a time
+        while (getline(inFile, line)) {        // read the file line by line
+            cout << line << "\n";              // echo each saved line to the screen
+        }
+        inFile.close();                        // close the file handle
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// Build the end-of-day statistics, save them to Summary.txt, then show them.
+void ActiveOrderList::generateSummaryReport() {
+    try {
+        int n = countOrders();                 // total number of active orders
+        if (n == 0) {                          // cannot summarise an empty list
+            throw "No active orders to summarise.";
+        }
+
+        double totalRevenue = 0.0;             // sum of every order price
+        int totalTime = 0;                     // sum of every delivery time
+        int vipCount = 0;                      // how many VIP orders
+        int pending = 0, outForDelivery = 0, delivered = 0, cancelled = 0;   // status tallies
+
+        OrderNode* temp = head;                // start at the head
+        while (temp != NULL) {                 // visit every order once
+            totalRevenue += temp->data->getTotalPrice();    // add this price to the total
+            totalTime += temp->data->getDeliveryTime();     // add this time to the total
+            if (temp->data->getIsVIP()) vipCount++;         // count VIP orders
+
+            string st = temp->data->getOrderStatus();       // read the status text
+            if (st == "Pending") pending++;                 // bucket the order by status
+            else if (st == "Out for Delivery") outForDelivery++;
+            else if (st == "Delivered") delivered++;
+            else if (st == "Cancelled") cancelled++;
+
+            temp = temp->next;                 // move to the next order
+        }
+
+        double avgValue = totalRevenue / n;     // average money per order
+        double avgTime = (double)totalTime / n; // average delivery time per order
+
+        DeliveryOrder** arr = new DeliveryOrder*[n];   // pointer array for the "top" lookups
+        temp = head;
+        int i = 0;
+        while (temp != NULL) { arr[i] = temp->data; i++; temp = temp->next; }   // fill the array
+
+        mergeSort(arr, 0, n - 1, 1, true);     // sort by price, highest first
+        int topID = arr[0]->getOrderID();      // the biggest sale is now at the front
+        double topValue = arr[0]->getTotalPrice();
+
+        mergeSort(arr, 0, n - 1, 2, true);     // sort by delivery time, longest first
+        int longID = arr[0]->getOrderID();     // the longest delivery is now at the front
+        int longTime = arr[0]->getDeliveryTime();
+
+        delete[] arr;                          // free the pointer array
+
+        ofstream outFile("Summary.txt");       // open Summary.txt for writing
+        if (!outFile) {                        // creation failed
+            throw "Could not open Summary.txt for writing.";
+        }
+
+        outFile << "=============================================\n";
+        outFile << "        BLOSSOM POS - END OF DAY SUMMARY      \n";
+        outFile << "=============================================\n";
+        outFile << "Total Active Orders : " << n << "\n";
+        outFile << "Total VIP Orders    : " << vipCount << "\n";
+        outFile << "Total Revenue       : RM" << totalRevenue << "\n";
+        outFile << "Average Order Value : RM" << avgValue << "\n";
+        outFile << "Average Delivery    : " << avgTime << " mins\n";
+        outFile << "---------------------------------------------\n";
+        outFile << "STATUS BREAKDOWN\n";
+        outFile << "  Pending          : " << pending << "\n";
+        outFile << "  Out for Delivery : " << outForDelivery << "\n";
+        outFile << "  Delivered        : " << delivered << "\n";
+        outFile << "  Cancelled        : " << cancelled << "\n";
+        outFile << "---------------------------------------------\n";
+        outFile << "Highest Value Order : #" << topID << " (RM" << topValue << ")\n";
+        outFile << "Longest Delivery    : #" << longID << " (" << longTime << " mins)\n";
+        outFile << "=============================================\n";
+        outFile.close();                       // finish writing and close the file
+
+        cout << "[System] Summary report generated and saved to Summary.txt.\n";
+        displaySavedSummary();                 // immediately read it back and show it
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// Sub-menu that lets the admin choose a sort, a search, or the summary report.
+void ActiveOrderList::analyticsMenu() {
+    int subChoice = 0;             // the admin's choice inside this sub-menu
+    while (subChoice != 6) {       // keep looping until they pick "Back"
+        cout << "\n--- ANALYTICS & REPORTS ---\n";
+        cout << "1. Sort Orders by Price (Highest Sales)\n";
+        cout << "2. Sort Orders by Delivery Time (Longest)\n";
+        cout << "3. Sort Orders by Order ID\n";
+        cout << "4. Search an Order by ID (Binary Search)\n";
+        cout << "5. Generate End-of-Day Summary Report\n";
+        cout << "6. Back to Main Menu\n";
+        cout << "Select an option: ";
+        cin >> subChoice;          // read the sub-menu choice
+
+        if (subChoice == 1) {
+            runSortReport(1, true);    // price, highest to lowest
+        } else if (subChoice == 2) {
+            runSortReport(2, true);    // delivery time, longest to shortest
+        } else if (subChoice == 3) {
+            runSortReport(3, false);   // order ID, ascending
+        } else if (subChoice == 4) {
+            runSearchByID();           // binary search by ID
+        } else if (subChoice == 5) {
+            generateSummaryReport();   // build + save + show the report
+        } else if (subChoice != 6) {
+            cout << "[!] Invalid option.\n";   // anything else is invalid
+        }
+    }
 }
