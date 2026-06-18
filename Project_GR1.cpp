@@ -699,6 +699,18 @@ int main() {
 //    (Merge Sort + Binary Search + Summary.txt)
 // ==========================================
 
+// Safely read an integer from the user. If they type non-numeric input,
+// clear the error and discard the bad characters so the program does not loop.
+bool readInt(int &out) {
+    cin >> out;                    // try to read an integer
+    if (cin.fail()) {              // the user typed something that is not a number
+        cin.clear();               // reset cin's error state so it works again
+        cin.ignore(10000, '\n');   // throw away the leftover bad characters in the buffer
+        return false;              // tell the caller the input was invalid
+    }
+    return true;                   // the input was a valid integer
+}
+
 // Decide the order of two orders for the chosen key and direction.
 // Returns true if 'a' should be placed BEFORE 'b'.
 bool compareOrders(DeliveryOrder* a, DeliveryOrder* b, int sortKey, bool descending) {
@@ -851,7 +863,9 @@ void ActiveOrderList::runSearchByID() {
 
         int targetID;                          // the ID the user is looking for
         cout << "Enter the Order ID you want to find: ";
-        cin >> targetID;                       // read the target ID
+        if (!readInt(targetID)) {              // reject letters / symbols
+            throw "Invalid input. Please enter a numeric Order ID.";
+        }
 
         int foundIndex = binarySearchByID(arr, n, targetID);   // run the search
 
@@ -977,7 +991,10 @@ void ActiveOrderList::analyticsMenu() {
         cout << "5. Generate End-of-Day Summary Report\n";
         cout << "6. Back to Main Menu\n";
         cout << "Select an option: ";
-        cin >> subChoice;          // read the sub-menu choice
+        if (!readInt(subChoice)) {             // user typed a letter instead of a number
+            cout << "[!] Please enter a number (1-6).\n";
+            continue;                          // reprint the menu and ask again
+        }
 
         if (subChoice == 1) {
             runSortReport(1, true);    // price, highest to lowest
