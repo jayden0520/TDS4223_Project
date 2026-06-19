@@ -1,0 +1,30 @@
+101
+Nasi Lemak Wangi
+Malay
+12.50
+PROMO10
+10
+102
+Golden Dragon Noodle House
+Chinese
+18.90
+NONE
+0
+103
+Spice Route Curry House
+Indian
+15.00
+SAVE5
+5
+104
+Pizza Bella
+Western
+22.00
+NONE
+0
+105
+Sakura Sushi Express
+Japanese
+28.50
+VIP20
+20
