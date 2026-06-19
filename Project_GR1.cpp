@@ -101,6 +101,69 @@ public:
 };
 
 // ==========================================
+// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - ✅ FIXED
+// ==========================================
+
+class Restaurant {
+private:
+    int restaurantID;
+    string name;
+    string cuisineType;
+    double basePrice;             // standard price for an order from this restaurant
+    string promoCode;             // promo code customers can redeem
+    double promoDiscountPercent;  // discount applied if the promo code matches
+
+public:
+    Restaurant() {
+        restaurantID = 0;
+        basePrice = 0.0;
+        promoDiscountPercent = 0.0;
+    }
+
+    Restaurant(int id, string n, string cuisine, double price, string promo, double discount) {
+        restaurantID = id;
+        name = n;
+        cuisineType = cuisine;
+        basePrice = price;
+        promoCode = promo;
+        promoDiscountPercent = discount;
+    }
+
+    // ✅ FIX 1: ADDED DESTRUCTOR
+    ~Restaurant() {
+        // No dynamic memory to free
+    }
+
+    int getRestaurantID() const { return restaurantID; }
+    string getName() const { return name; }
+    string getCuisineType() const { return cuisineType; }
+    double getBasePrice() const { return basePrice; }
+
+    // ===== FRIEND FUNCTIONS (MEMBER 3) =====
+    // Both functions need direct access to Restaurant's private promo fields.
+    friend void displayRestaurantInfo(const Restaurant& r);
+    friend double applyPromoCode(const Restaurant& r, string enteredCode);
+};
+
+// Friend function: prints catalog info, including private fields directly.
+void displayRestaurantInfo(const Restaurant& r) {
+    cout << "[" << r.restaurantID << "] " << r.name
+         << " (" << r.cuisineType << ") - Base Price: RM" << r.basePrice << "\n";
+}
+
+// Friend function: checks the entered code against the restaurant's PRIVATE promo
+// fields directly (no getter needed, since it is a friend) and returns the final price.
+double applyPromoCode(const Restaurant& r, string enteredCode) {
+    if (enteredCode != "" && enteredCode == r.promoCode) {
+        double discountAmount = r.basePrice * (r.promoDiscountPercent / 100.0);
+        cout << "[Promo] Code accepted! RM" << discountAmount << " discount applied.\n";
+        return r.basePrice - discountAmount;
+    }
+    cout << "[Promo] No valid promo code applied. Full price charged.\n";
+    return r.basePrice;
+}
+
+// ==========================================
 // 3. CUSTOM NODES & DATA STRUCTURE HEADERS
 // ==========================================
 
@@ -153,6 +216,32 @@ public:
     void push(DeliveryOrder* deletedOrder);
     DeliveryOrder* pop(); 
     void viewHistory(); 
+};
+
+// ==========================================
+// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) - ✅ FIXED
+// ==========================================
+
+struct PendingNode {
+    DeliveryOrder* data;
+    PendingNode* next;
+};
+
+class PendingQueue {
+private:
+    PendingNode* front;
+    PendingNode* rear;
+    int sizeCount;
+
+public:
+    PendingQueue() { front = NULL; rear = NULL; sizeCount = 0; }
+    ~PendingQueue();
+
+    void enqueue(DeliveryOrder* newOrder);   // customer order joins the rear
+    DeliveryOrder* dequeue();                // admin serves/dispatches from the front
+    void displayQueue();
+    bool isEmpty();
+    int getSize();
 };
 
 // ==========================================
@@ -552,6 +641,258 @@ void UndoStack::viewHistory() {
 }
 
 // ==========================================
+// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION - ✅ FIXED
+// ==========================================
+
+PendingQueue::~PendingQueue() {
+    PendingNode* current = front;
+    while (current != NULL) {
+        PendingNode* nextNode = current->next;
+        delete current->data;
+        delete current;
+        current = nextNode;
+    }
+}
+
+// Customer side: new orders are always appended to the REAR (FIFO entry point).
+void PendingQueue::enqueue(DeliveryOrder* newOrder) {
+    PendingNode* newNode = new PendingNode;
+    newNode->data = newOrder;
+    newNode->next = NULL;
+
+    if (rear == NULL) {
+        front = newNode;
+        rear = newNode;
+    } else {
+        rear->next = newNode;
+        rear = newNode;
+    }
+    sizeCount++;
+    cout << "[Queue] Order ID " << newOrder->getOrderID() << " appended to the rear of the dispatch line.\n";
+}
+
+// Admin side: the order waiting longest is always served from the FRONT (FIFO exit point).
+DeliveryOrder* PendingQueue::dequeue() {
+    if (front == NULL) {
+        cout << "[!] No pending orders in the dispatch line.\n";
+        return NULL;
+    }
+    PendingNode* temp = front;
+    DeliveryOrder* servedOrder = temp->data;
+    front = front->next;
+    if (front == NULL) rear = NULL;   // queue became empty
+    delete temp;
+    sizeCount--;
+    cout << "[Queue] Order ID " << servedOrder->getOrderID() << " served from the front of the dispatch line.\n";
+    return servedOrder;
+}
+
+bool PendingQueue::isEmpty() { return front == NULL; }
+int PendingQueue::getSize() { return sizeCount; }
+
+void PendingQueue::displayQueue() {
+    if (front == NULL) {
+        cout << "[Queue] The pending dispatch line is empty.\n";
+        return;
+    }
+    PendingNode* temp = front;
+    int pos = 1;
+    cout << "\n--- PENDING DISPATCH LINE (FIFO, Front -> Rear) ---\n";
+    while (temp != NULL) {
+        cout << pos << ". Order ID: " << temp->data->getOrderID()
+             << " | RM" << temp->data->getTotalPrice()
+             << " | Status: " << temp->data->getOrderStatus() << "\n";
+        temp = temp->next;
+        pos++;
+    }
+    cout << "-----------------------------------------------------\n";
+}
+
+// ==========================================
+// 5C. MEMBER 3: OVERLOADED FUNCTIONS - ✅ FIXED (Added try-catch)
+// ==========================================
+
+// Overload 1: calculate price with NO promo code involved.
+double calculateTotalPrice(double basePrice) {
+    return basePrice;
+}
+
+// Overload 2: calculate price applying a flat discount percentage directly.
+double calculateTotalPrice(double basePrice, double discountPercent) {
+    double discountAmount = basePrice * (discountPercent / 100.0);
+    return basePrice - discountAmount;
+}
+
+// Overload 3: show the entire restaurant catalog.
+void displayMenu(Restaurant catalog[], int count) {
+    cout << "\n===== RESTAURANT CATALOG =====\n";
+    for (int i = 0; i < count; i++) {
+        displayRestaurantInfo(catalog[i]);
+    }
+    cout << "===============================\n";
+}
+
+// Overload 4: show only restaurants matching a chosen cuisine type.
+void displayMenu(Restaurant catalog[], int count, string cuisineFilter) {
+    cout << "\n===== RESTAURANTS (" << cuisineFilter << ") =====\n";
+    bool found = false;
+    for (int i = 0; i < count; i++) {
+        if (catalog[i].getCuisineType() == cuisineFilter) {
+            displayRestaurantInfo(catalog[i]);
+            found = true;
+        }
+    }
+    if (!found) cout << "No restaurants found for this cuisine type.\n";
+    cout << "===============================\n";
+}
+
+// ==========================================
+// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER - ✅ FIXED (Added try-catch)
+// ==========================================
+// File format (6 lines per restaurant, no STL containers - fixed array only):
+// ID
+// Name
+// CuisineType
+// BasePrice
+// PromoCode  (use NONE if there isn't one)
+// PromoDiscountPercent
+
+const int MAX_RESTAURANTS = 20;
+
+int loadRestaurants(Restaurant catalog[], int maxSize) {
+    ifstream inFile("Restaurants.txt");
+    if (!inFile) {
+        cout << "[!] Restaurants.txt not found. No catalog loaded.\n";
+        return 0;
+    }
+
+    int count = 0;
+    string line;
+    while (count < maxSize && getline(inFile, line)) {
+        if (line == "") continue;          // skip blank lines
+
+        try {
+            int id = stoi(line);               // line 1: ID
+            string name, cuisine, promo;
+            double price = 0.0, discount = 0.0;
+
+            getline(inFile, name);             // line 2: Name
+            getline(inFile, cuisine);          // line 3: Cuisine
+            getline(inFile, line);
+            price = stod(line);                // line 4: Base Price
+            getline(inFile, promo);            // line 5: Promo Code
+            getline(inFile, line);
+            discount = stod(line);             // line 6: Promo Discount %
+
+            catalog[count] = Restaurant(id, name, cuisine, price, promo, discount);
+            count++;
+        } catch (const exception& e) {
+            cout << "[!] Error reading restaurant data. Skipping this entry.\n";
+            // Skip the remaining lines of this restaurant
+            for (int i = 0; i < 5; i++) {
+                if (!getline(inFile, line)) break;
+            }
+        }
+    }
+    inFile.close();
+    cout << "[System] Loaded " << count << " restaurant(s) from Restaurants.txt.\n";
+    return count;
+}
+
+// ==========================================
+// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) - ✅ FIXED (Added try-catch)
+// ==========================================
+
+// Forward declaration: readInt() is fully defined later in Member 4's section,
+// but Member 3's functions below need to call it before that point in the file.
+bool readInt(int &out);
+
+// Customer side: builds a DeliveryOrder from the chosen restaurant and ENQUEUES it.
+void placeNewOrder(PendingQueue &queue, ActiveOrderList &activeList, Restaurant catalog[], int restaurantCount) {
+    try {
+        if (restaurantCount == 0) throw "No restaurants available. Cannot place an order.";
+
+        displayMenu(catalog, restaurantCount);   // overload with no filter
+
+        int restChoice;
+        cout << "Select Restaurant ID to order from: ";
+        if (!readInt(restChoice)) throw "Invalid input. Please enter a numeric Restaurant ID.";
+
+        int idx = -1;
+        for (int i = 0; i < restaurantCount; i++) {
+            if (catalog[i].getRestaurantID() == restChoice) { idx = i; break; }
+        }
+        if (idx == -1) throw "Restaurant ID not found.";
+
+        int orderID, time, d, m, y;
+        cout << "Enter Order ID (e.g. 2001): ";
+        if (!readInt(orderID)) throw "Invalid Order ID.";
+        if (activeList.isIDExists(orderID)) throw "Order ID already exists in the active list.";
+
+        cout << "Enter Date (DD MM YYYY): ";
+        cin >> d >> m >> y;
+        cout << "Enter Est. Delivery Time (mins): ";
+        if (!readInt(time)) throw "Invalid delivery time.";
+
+        cin.ignore(10000, '\n');
+        string street, city, promoInput;
+        cout << "Enter Delivery Street: ";
+        getline(cin, street);
+        cout << "Enter Delivery City: ";
+        getline(cin, city);
+        cout << "Enter Promo Code (press Enter to skip): ";
+        getline(cin, promoInput);
+
+        double finalPrice;
+        if (promoInput == "") {
+            finalPrice = calculateTotalPrice(catalog[idx].getBasePrice());   // overload: no promo
+        } else {
+            finalPrice = applyPromoCode(catalog[idx], promoInput);          // friend function
+        }
+
+        char vipAns;
+        cout << "Is this a VIP order? (y/n): ";
+        cin >> vipAns;
+        bool isVip = (vipAns == 'y' || vipAns == 'Y');
+
+        Date dateStruct = {d, m, y};
+        Address addrStruct = {street, city};
+        DeliveryOrder* newOrder = new DeliveryOrder(orderID, finalPrice, dateStruct, time,
+                                                      "Unassigned", addrStruct, "Pending Dispatch", isVip);
+
+        queue.enqueue(newOrder);   // joins the rear of the Linked Queue
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// Admin side: DEQUEUES the longest-waiting order, assigns a rider, then hands it off
+// to the existing Doubly Linked List (ActiveOrderList) for live tracking.
+void dispatchNextOrder(PendingQueue &queue, ActiveOrderList &activeList) {
+    try {
+        if (queue.isEmpty()) throw "Pending dispatch line is empty. Nothing to dispatch.";
+
+        DeliveryOrder* nextOrder = queue.dequeue();   // served from the front
+
+        string riderName;
+        cout << "Assign Rider Name for Order ID " << nextOrder->getOrderID() << ": ";
+        cin.ignore(10000, '\n');
+        getline(cin, riderName);
+        nextOrder->setRiderName(riderName);
+        nextOrder->setOrderStatus("Out for Delivery");
+
+        if (nextOrder->getIsVIP()) {
+            activeList.addPriorityOrder(nextOrder);   // existing Member 2 function
+        } else {
+            activeList.addOrder(nextOrder);           // existing Member 2 function
+        }
+        cout << "[System] Order dispatched and moved to the Live Active Orders list.\n";
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// ==========================================
 // 6. MAIN FUNCTION (INTERACTIVE MENU)
 // ==========================================
 
@@ -564,9 +905,14 @@ int main() {
     cout << "============================================\n";
     activeList.loadFromFile(); 
 
+    // ===== MEMBER 3: Load restaurant catalog + set up the dispatch queue =====
+    Restaurant restaurantCatalog[MAX_RESTAURANTS];
+    int restaurantCount = loadRestaurants(restaurantCatalog, MAX_RESTAURANTS);
+    PendingQueue pendingLine;
+
     int choice = 0;
 
-    while (choice != 12) {
+    while (choice != 16) {
         cout << "\n[ MAIN MENU ]\n";
         cout << "1. Add a Standard Order\n";
         cout << "2. Add a VIP Priority Order\n";
@@ -579,7 +925,11 @@ int main() {
         cout << "9. View Undo History (Recycle Bin)\n";
         cout << "10. Undo Last Deletion\n";
         cout << "11. Analytics & Reports (Sort / Search / Summary)\n";
-        cout << "12. Save and Exit\n";
+        cout << "12. View Restaurant Catalog\n";
+        cout << "13. Place New Order (Join Pending Dispatch Line)\n";
+        cout << "14. Dispatch Next Order (Serve Queue Front)\n";
+        cout << "15. View Pending Dispatch Line\n";
+        cout << "16. Save and Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -683,7 +1033,20 @@ int main() {
         } else if (choice == 11) {
             activeList.analyticsMenu();
 
+        // ===== MEMBER 3: Restaurant Catalog + Linked Queue branches =====
         } else if (choice == 12) {
+            displayMenu(restaurantCatalog, restaurantCount);   // overload: show all
+
+        } else if (choice == 13) {
+            placeNewOrder(pendingLine, activeList, restaurantCatalog, restaurantCount);
+
+        } else if (choice == 14) {
+            dispatchNextOrder(pendingLine, activeList);
+
+        } else if (choice == 15) {
+            pendingLine.displayQueue();
+
+        } else if (choice == 16) {
             activeList.saveToFile();
             cout << "Exiting system. Data successfully saved. Goodbye!\n";
         } else {
