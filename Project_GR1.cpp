@@ -101,7 +101,7 @@ public:
 };
 
 // ==========================================
-// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - ✅ FIXED
+// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - 
 // ==========================================
 
 class Restaurant {
@@ -129,7 +129,7 @@ public:
         promoDiscountPercent = discount;
     }
 
-    // ✅ FIX 1: ADDED DESTRUCTOR
+    // ADDED DESTRUCTOR
     ~Restaurant() {
         // No dynamic memory to free
     }
@@ -141,7 +141,7 @@ public:
     string getPromoCode() const { return promoCode; }
     double getPromoDiscountPercent() const { return promoDiscountPercent; }
 
-    // ===== MEMBER 3 (ADDED): SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
+    // ===== MEMBER 3 : SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
     // The original version of this class was read-only after loading from file.
     // These setters allow an Admin to edit an existing catalog entry instead of
     // only being able to view it (Restaurant catalog had no Edit feature before).
@@ -231,7 +231,7 @@ public:
 };
 
 // ==========================================
-// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) - ✅ FIXED
+// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) -
 // ==========================================
 
 struct PendingNode {
@@ -255,7 +255,7 @@ public:
     bool isEmpty();
     int getSize();
 
-    // ===== MEMBER 3 (ADDED): EXTRA LINKED QUEUE OPERATIONS =====
+    // ===== MEMBER 3 : EXTRA LINKED QUEUE OPERATIONS =====
     DeliveryOrder* peekFront();                 // look at the next order WITHOUT removing it
     int findPosition(int orderID);              // 1-based position of an Order ID in the line, -1 if absent
     bool cancelByID(int orderID);                // remove a SPECIFIC node from the middle of the queue
@@ -658,7 +658,7 @@ void UndoStack::viewHistory() {
 }
 
 // ==========================================
-// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION - ✅ FIXED
+// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION 
 // ==========================================
 
 PendingQueue::~PendingQueue() {
@@ -725,7 +725,7 @@ void PendingQueue::displayQueue() {
     cout << "-----------------------------------------------------\n";
 }
 
-// ===== MEMBER 3 (ADDED): peekFront() =====
+// ===== MEMBER 3 : peekFront() =====
 // Lets the Admin preview which order is next in line WITHOUT dequeuing it.
 // This is different from dequeue(), which permanently removes the front node.
 // Demonstrates that a Linked Queue can be "read" non-destructively, not just
@@ -808,7 +808,7 @@ bool PendingQueue::cancelByID(int orderID) {
 }
 
 // ==========================================
-// 5C. MEMBER 3: OVERLOADED FUNCTIONS - ✅ FIXED (Added try-catch)
+// 5C. MEMBER 3: OVERLOADED FUNCTIONS  
 // ==========================================
 
 // Overload 1: calculate price with NO promo code involved.
@@ -875,7 +875,7 @@ int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
 }
 
 // ==========================================
-// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER - ✅ FIXED (Added try-catch)
+// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER 
 // ==========================================
 // File format (6 lines per restaurant, no STL containers - fixed array only):
 // ID
@@ -1058,7 +1058,7 @@ void editRestaurant(Restaurant catalog[], int count) {
 }
 
 // ==========================================
-// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) - ✅ FIXED (Added try-catch)
+// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) 
 // ==========================================
 
 // Forward declaration: readInt() is fully defined later in Member 4's section,
