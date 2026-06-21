@@ -4,6 +4,33 @@
 
 using namespace std;
 
+// ==========================================================================
+// 0. SHARED UI DESIGN TOOLKIT  (forward declarations)
+//    Defined in full inside Section 8. Declared here so EVERY section
+//    (main + Members 2/3/4) can draw the same consistent boxed interface.
+//    These helpers only format console output -- they touch no logic, no
+//    file I/O, and no data structures.
+// ==========================================================================
+void uiTop();                         // +====...====+   heavy border
+void uiRule();                        // +----...----+   light divider
+void uiBlank();                       // |            |  empty padded row
+void uiRow(string text);              // | left text              |
+void uiRowC(string text);             // |      centred text      |
+void uiRowR(string text);             // |              right text|
+void uiTitle(string text);            // boxed one-line title
+void uiBanner(string title, string subtitle);   // big welcome / exit banner
+void uiLogo();                        // ASCII "BLOSSOM POS" logo block
+void uiMenuItem(int number, string label);      // | [ 1 ]  Label          |
+void uiKeyVal(string label, string value);      // | Label      : value    |
+void uiLegend();                      // status-symbol legend line
+void printAuthHeader(string title);                   // boxed title banner
+void printAuthHeader(string title, string subtitle);  // boxed title + subtitle
+void printSuccess(string msg);        //   [ OK ]  message
+void printError(string msg);          //   [ !! ]  message
+void printInfo(string msg);           //   [ >> ]  message
+void printNote(string msg);           //   [ .. ]  message
+void printWarn(string msg);           //   [ ?? ]  message
+
 // ==========================================
 // 1. DATA STRUCTURE STRUCTS
 // ==========================================
@@ -101,7 +128,7 @@ public:
 };
 
 // ==========================================
-// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - 
+// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - ? FIXED
 // ==========================================
 
 class Restaurant {
@@ -129,7 +156,7 @@ public:
         promoDiscountPercent = discount;
     }
 
-    // ADDED DESTRUCTOR
+    // ? FIX 1: ADDED DESTRUCTOR
     ~Restaurant() {
         // No dynamic memory to free
     }
@@ -141,7 +168,7 @@ public:
     string getPromoCode() const { return promoCode; }
     double getPromoDiscountPercent() const { return promoDiscountPercent; }
 
-    // ===== MEMBER 3 : SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
+    // ===== MEMBER 3 (ADDED): SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
     // The original version of this class was read-only after loading from file.
     // These setters allow an Admin to edit an existing catalog entry instead of
     // only being able to view it (Restaurant catalog had no Edit feature before).
@@ -231,7 +258,7 @@ public:
 };
 
 // ==========================================
-// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) -
+// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) - ? FIXED
 // ==========================================
 
 struct PendingNode {
@@ -255,7 +282,7 @@ public:
     bool isEmpty();
     int getSize();
 
-    // ===== MEMBER 3 : EXTRA LINKED QUEUE OPERATIONS =====
+    // ===== MEMBER 3 (ADDED): EXTRA LINKED QUEUE OPERATIONS =====
     DeliveryOrder* peekFront();                 // look at the next order WITHOUT removing it
     int findPosition(int orderID);              // 1-based position of an Order ID in the line, -1 if absent
     bool cancelByID(int orderID);                // remove a SPECIFIC node from the middle of the queue
@@ -339,12 +366,12 @@ void ActiveOrderList::displayAllOrders() {
     }
 
     OrderNode* temp = head;
-    cout << "\n========== LIVE ACTIVE ORDERS ==========\n";
+    uiTitle("LIVE ACTIVE ORDERS");
     while (temp != NULL) {
         temp->data->displayOrder(); 
         temp = temp->next;
     }
-    cout << "==========================================\n";
+    uiRule();
 }
 
 void ActiveOrderList::editOrder(int id) {
@@ -360,7 +387,7 @@ void ActiveOrderList::editOrder(int id) {
 
     int editChoice = 0;
     while (editChoice != 4) {
-        cout << "\n--- EDITING ORDER ID: " << id << " ---\n";
+        uiTitle("EDITING ORDER ID: " + to_string(id));
         cout << "1. Update Status (Currently: " << temp->data->getOrderStatus() << ")\n";
         cout << "2. Reassign Rider (Currently: " << temp->data->getRiderName() << ")\n";
         cout << "3. Update Delivery Address\n";
@@ -398,7 +425,7 @@ void ActiveOrderList::editOrder(int id) {
 void ActiveOrderList::filterByStatus(string targetStatus) {
     OrderNode* temp = head;
     bool found = false;
-    cout << "\n--- FILTERING BY STATUS: " << targetStatus << " ---\n";
+    uiTitle("FILTERING BY STATUS: " + targetStatus);
     while (temp != NULL) {
         if (temp->data->getOrderStatus() == targetStatus) {
             temp->data->displayOrder();
@@ -439,9 +466,7 @@ void ActiveOrderList::generateDashboard() {
 
     double avgTime = (double)totalDeliveryTime / totalOrders;
 
-    cout << "\n============================================\n";
-    cout << "       BLOSSOM POS LIVE DASHBOARD           \n";
-    cout << "============================================\n";
+    uiTitle("BLOSSOM POS - LIVE DASHBOARD");
     cout << "Total Active Orders : " << totalOrders << "\n";
     cout << "Total VIP Orders    : " << vipCount << "\n"; // NEW VIP FEATURE
     cout << "Projected Revenue   : RM " << totalRevenue << "\n";
@@ -450,7 +475,7 @@ void ActiveOrderList::generateDashboard() {
     cout << "STATUS BREAKDOWN:\n";
     cout << " [ Pending ]        : " << pendingCount << "\n";
     cout << " [ Delivered ]      : " << deliveredCount << "\n";
-    cout << "============================================\n";
+    uiRule();
 }
 
 void ActiveOrderList::printReceipt(int id) {
@@ -642,7 +667,7 @@ void UndoStack::viewHistory() {
         return;
     }
     OrderNode* temp = top;
-    cout << "\n--- RECYCLE BIN HISTORY (LIFO) ---\n";
+    uiTitle("RECYCLE BIN HISTORY (LIFO)");
     int count = 1;
     while (temp != NULL) {
         cout << count << ". Order ID: " << temp->data->getOrderID() 
@@ -654,11 +679,11 @@ void UndoStack::viewHistory() {
         temp = temp->next;
         count++;
     }
-    cout << "----------------------------------\n";
+    uiRule();
 }
 
 // ==========================================
-// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION 
+// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION - ? FIXED
 // ==========================================
 
 PendingQueue::~PendingQueue() {
@@ -714,7 +739,7 @@ void PendingQueue::displayQueue() {
     }
     PendingNode* temp = front;
     int pos = 1;
-    cout << "\n--- PENDING DISPATCH LINE (FIFO, Front -> Rear) ---\n";
+    uiTitle("PENDING DISPATCH LINE (FIFO, Front -> Rear)");
     while (temp != NULL) {
         cout << pos << ". Order ID: " << temp->data->getOrderID()
              << " | RM" << temp->data->getTotalPrice()
@@ -722,10 +747,10 @@ void PendingQueue::displayQueue() {
         temp = temp->next;
         pos++;
     }
-    cout << "-----------------------------------------------------\n";
+    uiRule();
 }
 
-// ===== MEMBER 3 : peekFront() =====
+// ===== MEMBER 3 (ADDED): peekFront() =====
 // Lets the Admin preview which order is next in line WITHOUT dequeuing it.
 // This is different from dequeue(), which permanently removes the front node.
 // Demonstrates that a Linked Queue can be "read" non-destructively, not just
@@ -808,7 +833,7 @@ bool PendingQueue::cancelByID(int orderID) {
 }
 
 // ==========================================
-// 5C. MEMBER 3: OVERLOADED FUNCTIONS  
+// 5C. MEMBER 3: OVERLOADED FUNCTIONS - ? FIXED (Added try-catch)
 // ==========================================
 
 // Overload 1: calculate price with NO promo code involved.
@@ -824,16 +849,16 @@ double calculateTotalPrice(double basePrice, double discountPercent) {
 
 // Overload 3: show the entire restaurant catalog.
 void displayMenu(Restaurant catalog[], int count) {
-    cout << "\n===== RESTAURANT CATALOG =====\n";
+    uiTitle("RESTAURANT CATALOG");
     for (int i = 0; i < count; i++) {
         displayRestaurantInfo(catalog[i]);
     }
-    cout << "===============================\n";
+    uiRule();
 }
 
 // Overload 4: show only restaurants matching a chosen cuisine type.
 void displayMenu(Restaurant catalog[], int count, string cuisineFilter) {
-    cout << "\n===== RESTAURANTS (" << cuisineFilter << ") =====\n";
+    uiTitle("RESTAURANTS (" + cuisineFilter + ")");
     bool found = false;
     for (int i = 0; i < count; i++) {
         if (catalog[i].getCuisineType() == cuisineFilter) {
@@ -842,7 +867,7 @@ void displayMenu(Restaurant catalog[], int count, string cuisineFilter) {
         }
     }
     if (!found) cout << "No restaurants found for this cuisine type.\n";
-    cout << "===============================\n";
+    uiRule();
 }
 
 // ===== MEMBER 3 (ADDED): SEARCH RECORD REQUIREMENT (RESTAURANT MODULE) =====
@@ -875,7 +900,7 @@ int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
 }
 
 // ==========================================
-// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER 
+// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER - ? FIXED (Added try-catch)
 // ==========================================
 // File format (6 lines per restaurant, no STL containers - fixed array only):
 // ID
@@ -885,7 +910,7 @@ int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
 // PromoCode  (use NONE if there isn't one)
 // PromoDiscountPercent
 
-const int MAX_RESTAURANTS = 60;   // raised from 20 to comfortably hold the 50-record catalog
+const int MAX_RESTAURANTS = 20;
 
 int loadRestaurants(Restaurant catalog[], int maxSize) {
     ifstream inFile("Restaurants.txt");
@@ -1058,7 +1083,7 @@ void editRestaurant(Restaurant catalog[], int count) {
 }
 
 // ==========================================
-// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) 
+// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) - ? FIXED (Added try-catch)
 // ==========================================
 
 // Forward declaration: readInt() is fully defined later in Member 4's section,
@@ -1067,6 +1092,7 @@ bool readInt(int &out);
 
 // Customer side: builds a DeliveryOrder from the chosen restaurant and ENQUEUES it.
 void placeNewOrder(PendingQueue &queue, ActiveOrderList &activeList, Restaurant catalog[], int restaurantCount) {
+    uiTitle("PLACE NEW ORDER (JOIN PENDING LINE)");
     try {
         if (restaurantCount == 0) throw "No restaurants available. Cannot place an order.";
 
@@ -1119,14 +1145,23 @@ void placeNewOrder(PendingQueue &queue, ActiveOrderList &activeList, Restaurant 
                                                       "Unassigned", addrStruct, "Pending Dispatch", isVip);
 
         queue.enqueue(newOrder);   // joins the rear of the Linked Queue
+
+        uiTitle("ORDER PLACED");
+        uiKeyVal("Order ID", to_string(orderID));
+        uiKeyVal("Final Price", "RM" + to_string(finalPrice));
+        uiKeyVal("Priority", isVip ? "VIP" : "Standard");
+        uiKeyVal("Status", "Pending Dispatch");
+        uiRule();
+        printSuccess("Order added to the rear of the dispatch queue.");
     } catch (const char* msg) {
-        cout << "[!] " << msg << "\n";
+        printError(msg);
     }
 }
 
 // Admin side: DEQUEUES the longest-waiting order, assigns a rider, then hands it off
 // to the existing Doubly Linked List (ActiveOrderList) for live tracking.
 void dispatchNextOrder(PendingQueue &queue, ActiveOrderList &activeList) {
+    uiTitle("DISPATCH NEXT ORDER (SERVE QUEUE FRONT)");
     try {
         if (queue.isEmpty()) throw "Pending dispatch line is empty. Nothing to dispatch.";
 
@@ -1144,9 +1179,9 @@ void dispatchNextOrder(PendingQueue &queue, ActiveOrderList &activeList) {
         } else {
             activeList.addOrder(nextOrder);           // existing Member 2 function
         }
-        cout << "[System] Order dispatched and moved to the Live Active Orders list.\n";
+        printSuccess("Order dispatched and moved to the Live Active Orders list.");
     } catch (const char* msg) {
-        cout << "[!] " << msg << "\n";
+        printError(msg);
     }
 }
 
@@ -1164,9 +1199,8 @@ int main() {
     ActiveOrderList activeList;
     UndoStack undoHistory;
 
-    cout << "\n============================================\n";
-    cout << "   BLOSSOM POS: ORDER MANAGEMENT SYSTEM     \n";
-    cout << "============================================\n";
+    uiLogo();
+    uiBanner("BLOSSOM POS", "Order Management System");
     activeList.loadFromFile(); 
 
     // ===== MEMBER 3: Load restaurant catalog + set up the dispatch queue =====
@@ -1180,39 +1214,50 @@ int main() {
     string adminUser = runAuthenticationSystem(pendingLine, activeList, restaurantCatalog, restaurantCount);
     if (adminUser == "") {
         activeList.saveToFile();   // persist any customer changes before quitting
-        cout << "Exiting system. Goodbye!\n";
+        uiBanner("GOODBYE", "Thank you for using Blossom POS");
         return 0;
     }
-    cout << "\n[System] Welcome, Admin " << adminUser << ". Loading the management system...\n";
+    printInfo("Welcome, Admin " + adminUser + ". Loading the management system...");
+    uiLegend();
 
     int choice = 0;
 
     while (choice != 24) {
-        cout << "\n[ MAIN MENU ]\n";
-        cout << "1. Add a Standard Order\n";
-        cout << "2. Add a VIP Priority Order\n";
-        cout << "3. Display All Active Orders\n";
-        cout << "4. Live Business Dashboard\n";
-        cout << "5. Edit an Order\n";
-        cout << "6. Filter Orders by Status\n";
-        cout << "7. Print Individual Receipt\n";
-        cout << "8. Delete an Order\n";
-        cout << "9. View Undo History (Recycle Bin)\n";
-        cout << "10. Undo Last Deletion\n";
-        cout << "11. Analytics & Reports (Sort / Search / Summary)\n";
-        cout << "12. View Restaurant Catalog\n";
-        cout << "13. Place New Order (Join Pending Dispatch Line)\n";
-        cout << "14. Dispatch Next Order (Serve Queue Front)\n";
-        cout << "15. View Pending Dispatch Line\n";
-        cout << "16. Add a New Restaurant\n";
-        cout << "17. Edit a Restaurant\n";
-        cout << "18. Search Restaurant by ID\n";
-        cout << "19. Search Restaurant by Name\n";
-        cout << "20. Save Restaurant Catalog to File\n";
-        cout << "21. Preview Next Order in Dispatch Line\n";
-        cout << "22. Check an Order's Position in Dispatch Line\n";
-        cout << "23. Cancel a Pending Order (Before Dispatch)\n";
-        cout << "24. Save and Exit\n";
+        printAuthHeader("MAIN MENU", "Admin: " + adminUser);
+        uiRule();
+        uiRowC("- ORDERS -");
+        uiMenuItem(1, "Add a Standard Order");
+        uiMenuItem(2, "Add a VIP Priority Order");
+        uiMenuItem(3, "Display All Active Orders");
+        uiMenuItem(5, "Edit an Order");
+        uiMenuItem(6, "Filter Orders by Status");
+        uiMenuItem(7, "Print Individual Receipt");
+        uiMenuItem(8, "Delete an Order");
+        uiRule();
+        uiRowC("- DASHBOARD & RECYCLE BIN -");
+        uiMenuItem(4, "Live Business Dashboard");
+        uiMenuItem(9, "View Undo History (Recycle Bin)");
+        uiMenuItem(10, "Undo Last Deletion");
+        uiMenuItem(11, "Analytics & Reports (Sort/Search/Report)");
+        uiRule();
+        uiRowC("- RESTAURANTS -");
+        uiMenuItem(12, "View Restaurant Catalog");
+        uiMenuItem(16, "Add a New Restaurant");
+        uiMenuItem(17, "Edit a Restaurant");
+        uiMenuItem(18, "Search Restaurant by ID");
+        uiMenuItem(19, "Search Restaurant by Name");
+        uiMenuItem(20, "Save Restaurant Catalog to File");
+        uiRule();
+        uiRowC("- DISPATCH LINE (QUEUE) -");
+        uiMenuItem(13, "Place New Order (Join Pending Line)");
+        uiMenuItem(14, "Dispatch Next Order (Serve Queue Front)");
+        uiMenuItem(15, "View Pending Dispatch Line");
+        uiMenuItem(21, "Preview Next Order in Dispatch Line");
+        uiMenuItem(22, "Check an Order's Position in Line");
+        uiMenuItem(23, "Cancel a Pending Order (Before Dispatch)");
+        uiRule();
+        uiMenuItem(24, "Save and Exit");
+        uiTop();
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -1390,9 +1435,9 @@ int main() {
         } else if (choice == 24) {
             activeList.saveToFile();
             saveRestaurants(restaurantCatalog, restaurantCount);
-            cout << "Exiting system. Data successfully saved. Goodbye!\n";
+            uiBanner("GOODBYE", "Data saved. Thank you for using Blossom POS");
         } else {
-            cout << "[!] Invalid choice.\n";
+            printError("Invalid choice.");
         }
     }
 
@@ -1535,11 +1580,11 @@ void ActiveOrderList::runSortReport(int sortKey, bool descending) {
         else keyName = "Order ID";
         string dir = descending ? "Highest to Lowest" : "Lowest to Highest";   // direction label
 
-        cout << "\n========== SORTED ORDERS (" << keyName << " : " << dir << ") ==========\n";
+        uiTitle("SORTED ORDERS (" + keyName + " : " + dir + ")");
         for (int j = 0; j < n; j++) {          // walk the sorted array
             arr[j]->displayOrder();            // reuse the existing display method
         }
-        cout << "=====================================================================\n";
+        uiRule();
 
         delete[] arr;                          // free ONLY the pointer array, not the orders
     } catch (const char* msg) {                // catch our thrown text message
@@ -1595,7 +1640,7 @@ void ActiveOrderList::displaySavedSummary() {
             throw "Summary.txt not found. Please generate the report first.";
         }
 
-        cout << "\n----- RETRIEVED FROM Summary.txt -----\n";
+        uiTitle("RETRIEVED FROM Summary.txt");
         string line;                           // holds one line at a time
         while (getline(inFile, line)) {        // read the file line by line
             cout << line << "\n";              // echo each saved line to the screen
@@ -1618,7 +1663,6 @@ void ActiveOrderList::generateSummaryReport() {
         int totalTime = 0;                     // sum of every delivery time
         int vipCount = 0;                      // how many VIP orders
         int pending = 0, outForDelivery = 0, delivered = 0, cancelled = 0;   // status tallies
-        int pendingDispatch = 0, other = 0;    // NEW: catch queue status + any unknown status
 
         OrderNode* temp = head;                // start at the head
         while (temp != NULL) {                 // visit every order once
@@ -1631,8 +1675,6 @@ void ActiveOrderList::generateSummaryReport() {
             else if (st == "Out for Delivery") outForDelivery++;
             else if (st == "Delivered") delivered++;
             else if (st == "Cancelled") cancelled++;
-            else if (st == "Pending Dispatch") pendingDispatch++;  // NEW: still in the dispatch queue
-            else other++;                                          // NEW: any custom / unexpected status
 
             temp = temp->next;                 // move to the next order
         }
@@ -1674,10 +1716,6 @@ void ActiveOrderList::generateSummaryReport() {
         outFile << "  Out for Delivery : " << outForDelivery << "\n";
         outFile << "  Delivered        : " << delivered << "\n";
         outFile << "  Cancelled        : " << cancelled << "\n";
-        outFile << "  Pending Dispatch : " << pendingDispatch << "\n";   // NEW: queue-stage orders
-        outFile << "  Other            : " << other << "\n";             // NEW: any unexpected status
-        outFile << "  (Total accounted): " << (pending + outForDelivery + delivered
-                    + cancelled + pendingDispatch + other) << " / " << n << "\n";   // NEW: must match n
         outFile << "---------------------------------------------\n";
         outFile << "Highest Value Order : #" << topID << " (RM" << topValue << ")\n";
         outFile << "Longest Delivery    : #" << longID << " (" << longTime << " mins)\n";
@@ -1695,16 +1733,18 @@ void ActiveOrderList::generateSummaryReport() {
 void ActiveOrderList::analyticsMenu() {
     int subChoice = 0;             // the admin's choice inside this sub-menu
     while (subChoice != 6) {       // keep looping until they pick "Back"
-        cout << "\n--- ANALYTICS & REPORTS ---\n";
-        cout << "1. Sort Orders by Price (Highest Sales)\n";
-        cout << "2. Sort Orders by Delivery Time (Longest)\n";
-        cout << "3. Sort Orders by Order ID\n";
-        cout << "4. Search an Order by ID (Binary Search)\n";
-        cout << "5. Generate End-of-Day Summary Report\n";
-        cout << "6. Back to Main Menu\n";
+        printAuthHeader("ANALYTICS & REPORTS");
+        uiRule();
+        uiMenuItem(1, "Sort Orders by Price (Highest Sales)");
+        uiMenuItem(2, "Sort Orders by Delivery Time (Longest)");
+        uiMenuItem(3, "Sort Orders by Order ID");
+        uiMenuItem(4, "Search an Order by ID (Binary Search)");
+        uiMenuItem(5, "Generate End-of-Day Summary Report");
+        uiMenuItem(6, "Back to Main Menu");
+        uiTop();
         cout << "Select an option: ";
         if (!readInt(subChoice)) {             // user typed a letter instead of a number
-            cout << "[!] Please enter a number (1-6).\n";
+            printError("Please enter a number (1-6).");
             continue;                          // reprint the menu and ask again
         }
 
@@ -1739,12 +1779,21 @@ void   printAuthHeader(string title);                     // overload 1
 void   printAuthHeader(string title, string subtitle);    // overload 2
 string readNonEmptyField(string prompt);
 
+// ----- Reusable UI styling helpers 
+void   uiTop();                       // +====...====+  border
+void   uiRule();                      // +----...----+  divider
+void   uiRow(string text);            // | left-aligned row        |
+void   uiRowC(string text);           // |      centered row       |
+void   printSuccess(string msg);      //   [ OK ]  message
+void   printError(string msg);        //   [ !! ]  message
+void   printInfo(string msg);         //   [ >> ]  message
+
 // --------------------------------------------------------------------------
 // 8.2  PASSWORD HASH FUNCTION  (djb2)
 // --------------------------------------------------------------------------
 
 string hashPassword(string plain) {
-    unsigned long hash = 5381;                    
+    unsigned long long hash = 5381;   // 64-bit on every compiler -> portable hashes
     for (int i = 0; i < (int)plain.length(); i++) {
         hash = ((hash << 5) + hash) + (unsigned char)plain[i];
     }
@@ -1755,6 +1804,7 @@ string hashPassword(string plain) {
 // 8.3  OOP CLASSES  (Base + two Derived classes)
 // --------------------------------------------------------------------------
 
+// BASE CLASS: User  -  the details every account shares.
 class User {
 protected:
     string username;   
@@ -1762,12 +1812,14 @@ protected:
     string role;       
 
 public:
+    // Default constructor: builds an empty user.
     User() {
         username = "";
         password = "";
         role = "";
     }
 
+    // Parameterised constructor.
     User(string u, string p, string r) {
         username = u;
         password = p;
@@ -1778,7 +1830,7 @@ public:
     }
 
     string getUsername() const { return username; }
-    string getPassword() const { return password; }   
+    string getPassword() const { return password; }   // returns the stored hash
     string getRole() const { return role; }
 
     // Hashes the typed password and compares it to the stored hash.
@@ -1788,8 +1840,12 @@ public:
 
     // Virtual so Admin and Customer can show their own extra fields.
     virtual void displayProfile() const {
-        cout << "Username : " << username << "\n";
-        cout << "Role     : " << role << "\n";
+        uiRule();
+        uiRowC("USER PROFILE");
+        uiRule();
+        cout << "   Username : " << username << "\n";
+        cout << "   Role     : " << role << "\n";
+        uiRule();
     }
 };
 
@@ -1804,6 +1860,7 @@ public:
         role = "Admin";
     }
 
+    // The role is fixed to "Admin" automatically.
     Admin(string u, string p, string id) : User(u, p, "Admin") {
         staffID = id;
     }
@@ -1815,11 +1872,13 @@ public:
     string getStaffID() const { return staffID; }
 
     void displayProfile() const override {
-        cout << "----- ADMIN PROFILE -----\n";
-        cout << "Username : " << username << "\n";
-        cout << "Role     : " << role << "\n";
-        cout << "Staff ID : " << staffID << "\n";
-        cout << "-------------------------\n";
+        uiRule();
+        uiRowC("ADMIN PROFILE");
+        uiRule();
+        cout << "   Username : " << username << "\n";
+        cout << "   Role     : " << role << "\n";
+        cout << "   Staff ID : " << staffID << "\n";
+        uiRule();
     }
 };
 
@@ -1836,6 +1895,7 @@ public:
         role = "Customer";
     }
 
+    // The role is fixed to "Customer" automatically.
     Customer(string u, string p, string ph, string addr) : User(u, p, "Customer") {
         phone = ph;
         address = addr;
@@ -1848,15 +1908,21 @@ public:
     string getAddress() const { return address; }
 
     void displayProfile() const override {
-        cout << "----- CUSTOMER PROFILE -----\n";
-        cout << "Username : " << username << "\n";
-        cout << "Role     : " << role << "\n";
-        cout << "Phone    : " << phone << "\n";
-        cout << "Address  : " << address << "\n";
-        cout << "----------------------------\n";
+        uiRule();
+        uiRowC("CUSTOMER PROFILE");
+        uiRule();
+        cout << "   Username : " << username << "\n";
+        cout << "   Role     : " << role << "\n";
+        cout << "   Phone    : " << phone << "\n";
+        cout << "   Address  : " << address << "\n";
+        uiRule();
     }
 };
 
+// --------------------------------------------------------------------------
+// 8.3b  REMAINING FORWARD DECLARATIONS
+//       These reference the User class so they must appear AFTER the class definitions above.
+// --------------------------------------------------------------------------
 
 void   bubbleSortUsers(User** arr, int n);                          
 int    binarySearchUser(User** arr, int n, string targetUsername); 
@@ -1888,16 +1954,123 @@ string runAuthenticationSystem(PendingQueue &queue, ActiveOrderList &activeList,
 // 8.4  SMALL DISPLAY / INPUT HELPERS
 // --------------------------------------------------------------------------
 
-void printAuthHeader(string title) {
-    cout << "\n==================================================\n";
-    cout << "   " << title << "\n";
-    cout << "==================================================\n";
+// Inner width of every Member 1 box (characters between the side borders).
+const int UI_WIDTH = 54;
+
+// Build a string of n copies of character c (used for borders / padding).
+static string uiMake(char c, int n) {
+    string s = "";
+    for (int i = 0; i < n; i++) s += c;
+    return s;
 }
 
+static string uiCenterText(string text) {
+    int len = (int)text.length();
+    if (len >= UI_WIDTH) return text;
+    int pad   = UI_WIDTH - len;
+    int left  = pad / 2;
+    int right = pad - left;
+    return uiMake(' ', left) + text + uiMake(' ', right);
+}
+
+// Left-align text (with a small indent) padded to UI_WIDTH.
+static string uiLeftText(string text) {
+    string body = "  " + text;
+    int len = (int)body.length();
+    if (len >= UI_WIDTH) return body;
+    return body + uiMake(' ', UI_WIDTH - len);
+}
+
+// Right-align text inside UI_WIDTH (with a small right margin).
+static string uiRightText(string text) {
+    string body = text + "  ";
+    int len = (int)body.length();
+    if (len >= UI_WIDTH) return body;
+    return uiMake(' ', UI_WIDTH - len) + body;
+}
+
+void uiTop()   { cout << "+" << uiMake('=', UI_WIDTH) << "+\n"; }
+void uiRule()  { cout << "+" << uiMake('-', UI_WIDTH) << "+\n"; }
+void uiBlank() { cout << "|" << uiMake(' ', UI_WIDTH) << "|\n"; }
+void uiRow(string text)  { cout << "|" << uiLeftText(text)   << "|\n"; }
+void uiRowC(string text) { cout << "|" << uiCenterText(text) << "|\n"; }
+void uiRowR(string text) { cout << "|" << uiRightText(text)  << "|\n"; }
+
+// Consistent one-line status messages used across every screen.
+void printSuccess(string msg) { cout << "  [ OK ]  " << msg << "\n"; }
+void printError(string msg)   { cout << "  [ !! ]  " << msg << "\n"; }
+void printInfo(string msg)    { cout << "  [ >> ]  " << msg << "\n"; }
+void printNote(string msg)    { cout << "  [ .. ]  " << msg << "\n"; }
+void printWarn(string msg)    { cout << "  [ ?? ]  " << msg << "\n"; }
+
+// A self-contained boxed one-line title (used as a section header anywhere).
+void uiTitle(string text) {
+    cout << "\n";
+    uiTop();
+    uiRowC(text);
+    uiTop();
+}
+
+// A large banner with breathing room, for the welcome and exit screens.
+void uiBanner(string title, string subtitle) {
+    cout << "\n";
+    uiTop();
+    uiBlank();
+    uiRowC(title);
+    uiRowC(subtitle);
+    uiBlank();
+    uiTop();
+}
+
+// A logo block shown once at program start.
+void uiLogo() {
+    cout << "\n";
+    uiTop();
+    uiRowC("____  _     ___  ____ ____  ___  __  __");
+    uiRowC("| __ )| |   / _ \\/ ___/ ___|/ _ \\|  \\/  |");
+    uiRowC("|  _ \\| |  | | | \\___ \\___ \\ | | | |\\/| |");
+    uiRowC("| |_) | |__| |_| |___) |__) | |_| | |  | |");
+    uiRowC("|____/|_____\\___/|____/____/ \\___/|_|  |_|");
+    uiRowC("F O O D   D E L I V E R Y   S Y S T E M");
+    uiTop();
+}
+
+// A neatly numbered menu line:  | [ 1 ]  Label                |
+void uiMenuItem(int number, string label) {
+    string num = to_string(number);
+    if ((int)num.length() < 2) num = " " + num;     // pad single digits
+    uiRow("[ " + num + " ]  " + label);
+}
+
+// A padded "label : value" row inside a box.
+void uiKeyVal(string label, string value) {
+    string lab = label;
+    while ((int)lab.length() < 18) lab += " ";       // align all colons
+    uiRow(lab + ": " + value);
+}
+
+// A one-line legend explaining the status symbols (handy on the main screen).
+void uiLegend() {
+    uiRule();
+    uiRowC("[ OK ] done   [ !! ] error   [ >> ] info   [ ?? ] note");
+    uiRule();
+}
+
+// A single boxed title banner (used at the top of every auth screen).
+void printAuthHeader(string title) {
+    cout << "\n";
+    uiTop();
+    uiRowC(title);
+    uiTop();
+}
+
+// Boxed title banner with a subtitle line (e.g. the logged-in username).
 void printAuthHeader(string title, string subtitle) {
-    cout << "\n==================================================\n";
-    cout << "   " << title << " : " << subtitle << "\n";
-    cout << "==================================================\n";
+    cout << "\n";
+    uiTop();
+    uiRowC(title);
+    uiRowC("( " + subtitle + " )");
+    uiTop();
 }
 
 
@@ -1907,7 +2080,7 @@ string readNonEmptyField(string prompt) {
         cout << prompt;
         getline(cin, value);
         if (value == "") {
-            cout << "  [!] This field cannot be empty. Please try again.\n";
+            printError("This field cannot be empty. Please try again.");
         }
     }
     return value;
@@ -1919,16 +2092,17 @@ string readNonEmptyField(string prompt) {
 
 void bubbleSortUsers(User** arr, int n) {
     int i = 0;
-    bool sorted = false;            
+    bool sorted = false;      // assume the array is NOT sorted yet
 
     while (i < n && sorted == false) {
-        sorted = true;              
+        sorted = true;               // hope no swaps are needed on this pass
         for (int j = 0; j < n - i - 1; j++) {
+              // C++ compares strings letter by letter, so "alice" < "bob", etc.
             if (arr[j]->getUsername() > arr[j + 1]->getUsername()) {
-                User* temp = arr[j];       
+                User* temp = arr[j];       // swap the two pointers
                 arr[j] = arr[j + 1];
                 arr[j + 1] = temp;
-                sorted = false;            
+                sorted = false;             // a swap happened, keep going
             }
         }
         i++;
@@ -1937,21 +2111,25 @@ void bubbleSortUsers(User** arr, int n) {
 
 // --------------------------------------------------------------------------
 // 8.6  SEARCHING ALGORITHM  -  BINARY SEARCH  
+// The array MUST already be sorted by username (bubble sort does that).
+// Returns the array index of the matching account, or -1 if not found.
 // --------------------------------------------------------------------------
 
 int binarySearchUser(User** arr, int n, string targetUsername) {
-    int first = 0;                 
-    int last = n - 1;             
-    int found = -1;                 
+    int first = 0;                  // lower edge of the search window
+    int last = n - 1;               // upper edge of the search window
+    int found = -1;                 // -1 means "not found yet"
+
     while (found == -1 && first <= last) {
-        int mid = (first + last) / 2;               
-        string midName = arr[mid]->getUsername();  
+        int mid = (first + last) / 2;               // middle of the window
+        string midName = arr[mid]->getUsername();   // username at the middle
+
         if (midName == targetUsername) {
-            found = mid;                            
+            found = mid;                            // exact match
         } else if (targetUsername < midName) {
-            last = mid - 1;                        
+            last = mid - 1;                         // search the left half
         } else {
-            first = mid + 1;                       
+            first = mid + 1;                        // search the right half
         }
     }
     return found;
@@ -1959,26 +2137,34 @@ int binarySearchUser(User** arr, int n, string targetUsername) {
 
 // --------------------------------------------------------------------------
 // 8.7  ACCOUNT FILE HANDLING  -  Users.txt and Customers.txt
+//
+//      Admin record in Users.txt        Customer record in Customers.txt
+//      (3 lines each)                    (4 lines each)
+//        line 1: username                  line 1: username
+//        line 2: password HASH             line 2: password HASH
+//        line 3: staffID                   line 3: phone
+//                                          line 4: address
 // --------------------------------------------------------------------------
 
+// Reads one account file into the shared array, building the correct object.
 int loadUsersFromFile(string filename, string role, User** arr, int startIndex, int maxSize) {
     ifstream inFile(filename);
     if (!inFile) {
-        return startIndex;          
+        return startIndex;        
     }
 
     int count = startIndex;
     string uname, phash, field3, field4;
 
     while (count < maxSize && getline(inFile, uname)) {
-        if (uname == "") continue;              
-        if (!getline(inFile, phash)) break;     
-        if (!getline(inFile, field3)) break;    
+        if (uname == "") continue;               // skip blank separator lines
+        if (!getline(inFile, phash)) break;     // password hash
+        if (!getline(inFile, field3)) break;    // staffID (admin) / phone (customer)
 
         if (role == "Admin") {
-            arr[count] = new Admin(uname, phash, field3);         
+            arr[count] = new Admin(uname, phash, field3);         // dynamic memory
         } else {
-            if (!getline(inFile, field4)) break;                  
+            if (!getline(inFile, field4)) break;                   // address (customer)
             arr[count] = new Customer(uname, phash, field3, field4);
         }
         count++;
@@ -1988,6 +2174,7 @@ int loadUsersFromFile(string filename, string role, User** arr, int startIndex, 
     return count;
 }
 
+// Loads BOTH files into one array so login can search every account at once.
 int loadAllUsers(User** arr, int maxSize) {
     int count = 0;
     count = loadUsersFromFile("Users.txt", "Admin", arr, count, maxSize);
@@ -1995,14 +2182,16 @@ int loadAllUsers(User** arr, int maxSize) {
     return count;
 }
 
+// Releases all the User objects created with 'new' above.
 void freeUsers(User** arr, int n) {
     for (int i = 0; i < n; i++) {
-        delete arr[i];      
+        delete arr[i];      // virtual destructor frees the real Admin/Customer
     }
 }
 
+// Returns true if the given username is already used by ANY account.
 bool usernameExists(string uname) {
-    User** users = new User*[MAX_USERS];        
+    User** users = new User*[MAX_USERS];        // temporary dynamic array
     int n = loadAllUsers(users, MAX_USERS);
 
     bool exists = false;
@@ -2018,7 +2207,8 @@ bool usernameExists(string uname) {
     return exists;
 }
 
-
+// Creates a default admin the very first time the program runs (both files
+// empty), so the system can always be tested straight away.
 void seedDefaultAdmin() {
     User** users = new User*[MAX_USERS];
     int n = loadAllUsers(users, MAX_USERS);
@@ -2026,13 +2216,14 @@ void seedDefaultAdmin() {
     delete[] users;
 
     if (n > 0) {
-        return;         
+        return;             // accounts already exist, nothing to seed
     }
 
     ofstream outFile("Users.txt", ios::app);
     if (!outFile) {
         return;
     }
+    // Note the password is stored as a HASH, not as the plain text "admin123".
     outFile << "admin" << "\n"
             << hashPassword("admin123") << "\n"
             << "S001" << "\n";
@@ -2051,30 +2242,42 @@ void registerCustomer() {
     printAuthHeader("REGISTER NEW CUSTOMER");
 
     try {
-        cin.ignore(10000, '\n');   
+        cin.ignore(10000, '\n'); // clear the leftover newline from the menu
 
-        string uname = readNonEmptyField("Choose a Username: ");
-        if (usernameExists(uname)) {
-            throw "That username is already taken. Please pick another one.";
+        string uname;
+
+        while (true) {
+            uname = readNonEmptyField("Choose a Username: ");
+
+            if (usernameExists(uname)) {
+                printError("That username is already taken. Please pick another one.");
+            } else {
+                break; // username is available, continue registration
+            }
         }
 
         string pwd   = readNonEmptyField("Choose a Password: ");
         string phone = readNonEmptyField("Enter Phone Number: ");
         string addr  = readNonEmptyField("Enter Delivery Address: ");
 
-        ofstream outFile("Customers.txt", ios::app);   
+        ofstream outFile("Customers.txt", ios::app);
         if (!outFile) {
             throw "Could not open Customers.txt for writing.";
         }
-        
-        outFile << uname << "\n" << hashPassword(pwd) << "\n"
-                << phone << "\n" << addr << "\n";
+
+        // Save the HASH of the password, never the plain text.
+        outFile << uname << "\n"
+                << hashPassword(pwd) << "\n"
+                << phone << "\n"
+                << addr << "\n";
+
         outFile.close();
 
         printAuthHeader("CUSTOMER REGISTERED", uname);
-        cout << "[System] New customer account saved to Customers.txt.\n";
+        printSuccess("New customer account saved to Customers.txt.");
+
     } catch (const char* msg) {
-        cout << "[!] " << msg << "\n";
+        printError(msg);
     }
 }
 
@@ -2083,45 +2286,61 @@ void registerAdmin() {
     printAuthHeader("REGISTER NEW ADMIN / STAFF");
 
     try {
-        cin.ignore(10000, '\n');  
+        cin.ignore(10000, '\n');
 
         string code = readNonEmptyField("Enter Staff Registration Code: ");
         if (code != "MMU2026") {
             throw "Incorrect staff code. Admin registration cancelled.";
         }
 
-        string uname = readNonEmptyField("Choose a Username: ");
-        if (usernameExists(uname)) {
-            throw "That username is already taken. Please pick another one.";
+        string uname;
+
+        while (true) {
+            uname = readNonEmptyField("Choose a Username: ");
+
+            if (usernameExists(uname)) {
+                printError("That username is already taken. Please pick another one.");
+            } else {
+                break; // username is available
+            }
         }
 
         string pwd     = readNonEmptyField("Choose a Password: ");
         string staffID = readNonEmptyField("Enter Staff ID (e.g. S002): ");
 
-        ofstream outFile("Users.txt", ios::app);       
+        ofstream outFile("Users.txt", ios::app);     // append, keep old records
         if (!outFile) {
             throw "Could not open Users.txt for writing.";
         }
-        
-        outFile << uname << "\n" << hashPassword(pwd) << "\n" << staffID << "\n";
+
+        // Save the HASH of the password, never the plain text.
+        outFile << uname << "\n"
+                << hashPassword(pwd) << "\n"
+                << staffID << "\n";
+
         outFile.close();
 
         printAuthHeader("ADMIN REGISTERED", uname);
-        cout << "[System] New admin account saved to Users.txt.\n";
+        printSuccess("New admin account saved to Users.txt.");
+
     } catch (const char* msg) {
-        cout << "[!] " << msg << "\n";
+        printError(msg);
     }
 }
 
 // --------------------------------------------------------------------------
 // 8.9  LOGIN  (Sort, then Binary Search)
+//      1. Load every account from both files into a dynamic array.
+//      2. Bubble Sort the array by username (Chapter 8).
+//      3. Binary Search for the typed username (Chapter 6).
+//      4. If found, hash-check the password. On success, record who logged in.
 // --------------------------------------------------------------------------
 
 bool loginUser(string &loggedUser, string &loggedRole) {
     printAuthHeader("LOGIN");
 
-    User** users = new User*[MAX_USERS];           
-    int n = loadAllUsers(users, MAX_USERS);      
+    User** users = new User*[MAX_USERS];           // dynamic array of accounts
+    int n = loadAllUsers(users, MAX_USERS);        // STEP 1: load from files
 
     bool success = false;
 
@@ -2130,31 +2349,31 @@ bool loginUser(string &loggedUser, string &loggedRole) {
             throw "No accounts exist yet. Please register first.";
         }
 
-        bubbleSortUsers(users, n);                 
+        bubbleSortUsers(users, n);                  // STEP 2: sort by username
 
-        cin.ignore(10000, '\n');                   
+        cin.ignore(10000, '\n');                    // clear leftover menu newline
         string uname = readNonEmptyField("Username: ");
         string pwd   = readNonEmptyField("Password: ");
 
         int index = binarySearchUser(users, n, uname);   
 
         if (index == -1) {
-            cout << "[!] Account '" << uname << "' does not exist.\n";
-        } else if (!users[index]->checkPassword(pwd)) {   
-            cout << "[!] Incorrect password. Login failed.\n";
+            printError("Account '" + uname + "' does not exist.");      // STEP 3: search
+        } else if (!users[index]->checkPassword(pwd)) {                 // STEP 4: hash-check
+            printError("Incorrect password. Login failed.");
         } else {
             loggedUser = users[index]->getUsername();
             loggedRole = users[index]->getRole();
             printAuthHeader("LOGIN SUCCESSFUL", loggedUser);
-            users[index]->displayProfile();   
+            users[index]->displayProfile();                             // polymorphism: Admin or Customer view
             success = true;
         }
     } catch (const char* msg) {
-        cout << "[!] " << msg << "\n";
+        printError(msg);
     }
 
-    freeUsers(users, n);     
-    delete[] users;          
+    freeUsers(users, n);          // free all loaded account objects
+    delete[] users;               // free the pointer array
     return success;
 }
 
@@ -2162,6 +2381,7 @@ bool loginUser(string &loggedUser, string &loggedRole) {
 // 8.10  CUSTOMER ORDER LEDGER  -  CustomerOrders.txt
 // --------------------------------------------------------------------------
 
+// Adds a "this order belongs to this customer" record with its details.
 void recordCustomerOrder(int orderID, string username, double price,
                          string street, string city) {
     ofstream out("CustomerOrders.txt", ios::app);
@@ -2171,6 +2391,7 @@ void recordCustomerOrder(int orderID, string username, double price,
     out.close();
 }
 
+// Returns the username that owns the given Order ID, or "" if none is recorded.
 string findOrderOwner(int targetID) {
     ifstream in("CustomerOrders.txt");
     if (!in) return "";
@@ -2180,20 +2401,20 @@ string findOrderOwner(int targetID) {
     string owner = "";
     string nameLine, streetLine, cityLine;
     while (in >> id) {
-        in.ignore(10000, '\n');     
-        getline(in, nameLine);      
+        in.ignore(10000, '\n');     // finish the ID line
+        getline(in, nameLine);      // username
         in >> price; in.ignore(10000, '\n');
-        getline(in, streetLine);   
-        getline(in, cityLine);      
+        getline(in, streetLine);    // street
+        getline(in, cityLine);      // city
         if (id == targetID) {
-            owner = nameLine;    
+            owner = nameLine;       // remember the most recent match
         }
     }
     in.close();
     return owner;
 }
 
-
+// Rewrites CustomerOrders.txt without the given Order ID (used after a cancel).
 void removeOrderOwner(int targetID) {
     ifstream in("CustomerOrders.txt");
     if (!in) return;
@@ -2214,7 +2435,7 @@ void removeOrderOwner(int targetID) {
         in >> price; in.ignore(10000, '\n');
         getline(in, streetLine);
         getline(in, cityLine);
-        if (id != targetID) {                 
+        if (id != targetID) {                  // keep everything except the target
             keepIDs[keepCount]     = id;
             keepNames[keepCount]   = nameLine;
             keepPrices[keepCount]  = price;
@@ -2225,7 +2446,7 @@ void removeOrderOwner(int targetID) {
     }
     in.close();
 
-    ofstream out("CustomerOrders.txt");       
+    ofstream out("CustomerOrders.txt");       // overwrite with the kept records
     for (int i = 0; i < keepCount; i++) {
         out << keepIDs[i] << "\n" << keepNames[i] << "\n" << keepPrices[i] << "\n"
             << keepStreets[i] << "\n" << keepCities[i] << "\n";
@@ -2233,23 +2454,28 @@ void removeOrderOwner(int targetID) {
     out.close();
 }
 
+// Removes one specific Order ID from Member 3's dispatch queue, using ONLY the
+// queue's public methods. We rotate the whole queue once: take each order from
+// the front, drop the one we want to cancel, and put the rest back at the rear.
+// The original order of the remaining items is preserved.
 bool removeFromQueueByID(PendingQueue &queue, int targetID) {
     int n = queue.getSize();
     bool removed = false;
     for (int i = 0; i < n; i++) {
-        DeliveryOrder* o = queue.dequeue();        
+        DeliveryOrder* o = queue.dequeue();        // take from the front
         if (o == NULL) break;
         if (!removed && o->getOrderID() == targetID) {
-            delete o;                              
+            delete o;                               // cancel: free it, do NOT re-add
             removed = true;
         } else {
-            queue.enqueue(o);                     
+            queue.enqueue(o);                     // keep it: send to the rear
         }
     }
     return removed;
 }
 
-
+// Reads the CURRENT status of an Order ID from Orders.txt. Returns "" if the
+// order is not there. (Orders.txt follows Member 2's saveToFile format.)
 string getOrderStatusFromFile(int targetID) {
     ifstream in("Orders.txt");
     if (!in) return "";
@@ -2279,6 +2505,7 @@ string getOrderStatusFromFile(int targetID) {
 // 8.11  CUSTOMER FEATURES 
 // --------------------------------------------------------------------------
 
+// Option 2: build an order from a chosen restaurant and ENQUEUE it into Member
 void customerPlaceOrder(string username, PendingQueue &queue, ActiveOrderList &activeList,
                         Restaurant catalog[], int catalogCount) {
     printAuthHeader("PLACE A NEW ORDER", username);
@@ -2288,7 +2515,7 @@ void customerPlaceOrder(string username, PendingQueue &queue, ActiveOrderList &a
             throw "No restaurants are available right now.";
         }
 
-        displayMenu(catalog, catalogCount);  
+        displayMenu(catalog, catalogCount);   // Member 3's existing catalog display
 
         cout << "Select a Restaurant ID: ";
         int restID;
@@ -2303,7 +2530,8 @@ void customerPlaceOrder(string username, PendingQueue &queue, ActiveOrderList &a
         cout << "Enter a new Order ID (e.g. 3001): ";
         int orderID;
         if (!readInt(orderID)) throw "Invalid Order ID.";
-  
+        // The ID must be unique in BOTH the live list and our ledger (the ledger
+        // also covers orders that are still waiting in the dispatch queue).
         if (activeList.isIDExists(orderID)) throw "That Order ID already exists.";
         if (findOrderOwner(orderID) != "")  throw "That Order ID already exists.";
 
@@ -2317,22 +2545,24 @@ void customerPlaceOrder(string username, PendingQueue &queue, ActiveOrderList &a
         cout << "Enter Est. Delivery Time (mins): ";
         if (!readInt(time)) throw "Invalid delivery time.";
 
-        cin.ignore(10000, '\n');               
+        cin.ignore(10000, '\n');               // clear newline before getline
         string street = readNonEmptyField("Enter Delivery Street: ");
         string city   = readNonEmptyField("Enter Delivery City: ");
 
-        double price = catalog[idx].getBasePrice();   
+        double price = catalog[idx].getBasePrice();   // standard price for this restaurant
 
         Date dateStruct = {d, m, y};
         Address addrStruct = {street, city};
 
-
+        // New order starts as "Pending Dispatch" with no rider, and goes into the
+        // QUEUE (not the active list). The admin's dispatch step is what later
+        // assigns a rider and moves it into the live Active list / Orders.txt.
         DeliveryOrder* newOrder = new DeliveryOrder(orderID, price, dateStruct, time,
                                                     "Unassigned", addrStruct,
                                                     "Pending Dispatch", false);
 
-        queue.enqueue(newOrder);                                   
-        recordCustomerOrder(orderID, username, price, street, city);   
+        queue.enqueue(newOrder);                                   // Member 3's Linked Queue
+        recordCustomerOrder(orderID, username, price, street, city);   // Member 1's ledger
 
         cout << "[System] Order " << orderID
              << " placed and added to the dispatch queue.\n";
@@ -2342,7 +2572,7 @@ void customerPlaceOrder(string username, PendingQueue &queue, ActiveOrderList &a
     }
 }
 
-
+// Option 3: show ONLY the logged-in customer's own orders. We read them from
 void trackMyOrders(string username, ActiveOrderList &activeList) {
     printAuthHeader("TRACK MY ORDERS", username);
 
@@ -2388,6 +2618,9 @@ void trackMyOrders(string username, ActiveOrderList &activeList) {
     }
 }
 
+// Option 4: cancel one of the customer's own orders, but ONLY while it is still
+// waiting in the dispatch queue. If the admin has already dispatched it (it now
+// lives in Orders.txt / is "Out for Delivery"), the cancellation is refused.
 void cancelMyOrder(string username, ActiveOrderList &activeList, PendingQueue &queue) {
     printAuthHeader("CANCEL MY ORDER", username);
 
@@ -2398,12 +2631,15 @@ void cancelMyOrder(string username, ActiveOrderList &activeList, PendingQueue &q
         return;
     }
 
+    // 1) The order must belong to THIS customer.
     if (findOrderOwner(targetID) != username) {
         cout << "[!] Error: Order " << targetID
              << " is not yours, or it does not exist.\n";
         return;
     }
 
+    // 2) If it is already in the live list (Orders.txt), it has been dispatched
+    //    and is on its way, so it can no longer be cancelled.
     activeList.saveToFile();
     string liveStatus = getOrderStatusFromFile(targetID);
     if (liveStatus != "") {
@@ -2411,6 +2647,8 @@ void cancelMyOrder(string username, ActiveOrderList &activeList, PendingQueue &q
         return;
     }
 
+    // 3) Otherwise it is still Pending in the dispatch queue, so cancelling is
+    //    allowed. Remove it from the queue and from our ledger.
     if (removeFromQueueByID(queue, targetID)) {
         removeOrderOwner(targetID);
         cout << "[System] Order " << targetID << " has been cancelled successfully.\n";
@@ -2419,20 +2657,24 @@ void cancelMyOrder(string username, ActiveOrderList &activeList, PendingQueue &q
     }
 }
 
+// The restricted menu a CUSTOMER sees after logging in. They can only ever touch
+// their own orders here. Logging out returns to the login portal.
 void runCustomerMenu(string username, PendingQueue &queue, ActiveOrderList &activeList,
                      Restaurant catalog[], int catalogCount) {
     int choice = 0;
     while (choice != 5) {
         printAuthHeader("CUSTOMER MENU", username);
-        cout << "1. View Menu Catalog\n";
-        cout << "2. Place a New Order\n";
-        cout << "3. Track My Orders\n";
-        cout << "4. Cancel My Order\n";
-        cout << "5. Logout\n";
+        uiRule();
+        uiRow("[1]  View Menu Catalog");
+        uiRow("[2]  Place a New Order");
+        uiRow("[3]  Track My Orders");
+        uiRow("[4]  Cancel My Order");
+        uiRow("[5]  Logout");
+        uiRule();
         cout << "Enter choice: ";
 
         if (!readInt(choice)) {
-            cout << "[!] Please enter a number between 1 and 5.\n";
+            printError("Please enter a number between 1 and 5.");
             continue;
         }
 
@@ -2445,9 +2687,9 @@ void runCustomerMenu(string username, PendingQueue &queue, ActiveOrderList &acti
         } else if (choice == 4) {
             cancelMyOrder(username, activeList, queue);
         } else if (choice == 5) {
-            cout << "[System] Logging out " << username << ". See you again!\n";
+            printInfo("Logging out " + username + ". See you again!");
         } else {
-            cout << "[!] Invalid choice. Please try again.\n";
+            printError("Invalid choice. Please try again.");
         }
     }
 }
@@ -2457,19 +2699,21 @@ void runCustomerMenu(string username, PendingQueue &queue, ActiveOrderList &acti
 // --------------------------------------------------------------------------
 string runAuthenticationSystem(PendingQueue &queue, ActiveOrderList &activeList,
                                Restaurant catalog[], int catalogCount) {
-    seedDefaultAdmin();   
+    seedDefaultAdmin();   // guarantee at least one admin exists for testing
 
     int choice = 0;
     while (true) {
-        printAuthHeader("BLOSSOM POS - LOGIN PORTAL");
-        cout << "1. Register as Customer\n";
-        cout << "2. Register as Admin / Staff\n";
-        cout << "3. Login\n";
-        cout << "4. Exit\n";
+        printAuthHeader("BLOSSOM POS", "Login Portal");
+        uiRule();
+        uiRow("[1]  Register as Customer");
+        uiRow("[2]  Register as Admin / Staff");
+        uiRow("[3]  Login");
+        uiRow("[4]  Exit");
+        uiRule();
         cout << "Enter choice: ";
 
         if (!readInt(choice)) {
-            cout << "[!] Please enter a number between 1 and 4.\n";
+            printError("Please enter a number between 1 and 4.");
             continue;
         }
 
@@ -2482,16 +2726,16 @@ string runAuthenticationSystem(PendingQueue &queue, ActiveOrderList &activeList,
             string role = "";
             if (loginUser(user, role)) {
                 if (role == "Admin") {
-                    return user;                 
+                    return user;                 // hand control to the admin system
                 } else {
                     runCustomerMenu(user, queue, activeList, catalog, catalogCount);
                 }
             }
         } else if (choice == 4) {
-            cout << "[System] Closing the login portal.\n";
-            return "";                          
+            printInfo("Closing the login portal.");
+            return "";                          // no admin session; main() will exit
         } else {
-            cout << "[!] Invalid choice. Please try again.\n";
+            printError("Invalid choice. Please try again.");
         }
     }
 }
