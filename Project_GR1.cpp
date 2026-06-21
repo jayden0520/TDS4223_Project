@@ -138,6 +138,18 @@ public:
     string getName() const { return name; }
     string getCuisineType() const { return cuisineType; }
     double getBasePrice() const { return basePrice; }
+    string getPromoCode() const { return promoCode; }
+    double getPromoDiscountPercent() const { return promoDiscountPercent; }
+
+    // ===== MEMBER 3 (ADDED): SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
+    // The original version of this class was read-only after loading from file.
+    // These setters allow an Admin to edit an existing catalog entry instead of
+    // only being able to view it (Restaurant catalog had no Edit feature before).
+    void setName(string newName) { name = newName; }
+    void setCuisineType(string newCuisine) { cuisineType = newCuisine; }
+    void setBasePrice(double newPrice) { basePrice = newPrice; }
+    void setPromoCode(string newPromo) { promoCode = newPromo; }
+    void setPromoDiscountPercent(double newDiscount) { promoDiscountPercent = newDiscount; }
 
     // ===== FRIEND FUNCTIONS (MEMBER 3) =====
     // Both functions need direct access to Restaurant's private promo fields.
@@ -242,6 +254,11 @@ public:
     void displayQueue();
     bool isEmpty();
     int getSize();
+
+    // ===== MEMBER 3 (ADDED): EXTRA LINKED QUEUE OPERATIONS =====
+    DeliveryOrder* peekFront();                 // look at the next order WITHOUT removing it
+    int findPosition(int orderID);              // 1-based position of an Order ID in the line, -1 if absent
+    bool cancelByID(int orderID);                // remove a SPECIFIC node from the middle of the queue
 };
 
 // ==========================================
@@ -708,6 +725,88 @@ void PendingQueue::displayQueue() {
     cout << "-----------------------------------------------------\n";
 }
 
+// ===== MEMBER 3 (ADDED): peekFront() =====
+// Lets the Admin preview which order is next in line WITHOUT dequeuing it.
+// This is different from dequeue(), which permanently removes the front node.
+// Demonstrates that a Linked Queue can be "read" non-destructively, not just
+// consumed -- useful before the Admin commits to assigning a rider.
+DeliveryOrder* PendingQueue::peekFront() {
+    if (front == NULL) {
+        cout << "[!] The pending dispatch line is empty. Nothing to preview.\n";
+        return NULL;
+    }
+    return front->data;
+}
+
+// ===== MEMBER 3 (ADDED): findPosition() =====
+// Traverses the queue from front to rear and returns the 1-based position of
+// a given Order ID, or -1 if it is not currently waiting in line. This is a
+// simple linear search over the Linked Queue (separate from Member 4's Binary
+// Search, since the queue is not stored in a sorted array).
+int PendingQueue::findPosition(int orderID) {
+    PendingNode* temp = front;
+    int pos = 1;
+    while (temp != NULL) {
+        if (temp->data->getOrderID() == orderID) {
+            return pos;
+        }
+        temp = temp->next;
+        pos++;
+    }
+    return -1;   // not found anywhere in the line
+}
+
+// ===== MEMBER 3 (ADDED): cancelByID() =====
+// Removes a SPECIFIC order from anywhere in the queue, not just the front.
+// dequeue() can only serve the front node (true FIFO behaviour), but real
+// customers sometimes need to cancel an order while it is still waiting in
+// the middle of the line. This requires unlinking a node from a singly
+// linked structure, which means we must keep track of the PREVIOUS node as
+// we walk forward (a node here cannot look backwards on its own).
+bool PendingQueue::cancelByID(int orderID) {
+    if (front == NULL) {
+        cout << "[!] The pending dispatch line is empty. Nothing to cancel.\n";
+        return false;
+    }
+
+    // Case 1: the order to cancel is the FRONT node itself.
+    if (front->data->getOrderID() == orderID) {
+        PendingNode* temp = front;
+        DeliveryOrder* cancelledOrder = temp->data;
+        front = front->next;
+        if (front == NULL) rear = NULL;   // queue became empty
+        delete cancelledOrder;            // free the order object
+        delete temp;                      // free the node
+        sizeCount--;
+        cout << "[Queue] Order ID " << orderID << " cancelled from the front of the line.\n";
+        return true;
+    }
+
+    // Case 2: the order is somewhere AFTER the front. Walk forward holding
+    // both the current node and the one before it, so we can re-link around
+    // the node we are deleting.
+    PendingNode* prevNode = front;
+    PendingNode* currentNode = front->next;
+    while (currentNode != NULL) {
+        if (currentNode->data->getOrderID() == orderID) {
+            prevNode->next = currentNode->next;   // skip over currentNode
+            if (currentNode == rear) {             // cancelling the last node
+                rear = prevNode;
+            }
+            delete currentNode->data;
+            delete currentNode;
+            sizeCount--;
+            cout << "[Queue] Order ID " << orderID << " cancelled from the dispatch line.\n";
+            return true;
+        }
+        prevNode = currentNode;
+        currentNode = currentNode->next;
+    }
+
+    cout << "[!] Order ID " << orderID << " was not found in the dispatch line.\n";
+    return false;
+}
+
 // ==========================================
 // 5C. MEMBER 3: OVERLOADED FUNCTIONS - ✅ FIXED (Added try-catch)
 // ==========================================
@@ -744,6 +843,35 @@ void displayMenu(Restaurant catalog[], int count, string cuisineFilter) {
     }
     if (!found) cout << "No restaurants found for this cuisine type.\n";
     cout << "===============================\n";
+}
+
+// ===== MEMBER 3 (ADDED): SEARCH RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// Linear search through the fixed-size catalog array by Restaurant ID.
+// (A Binary Search is not used here on purpose -- Member 4 already owns the
+// Binary Search requirement for Orders, and the restaurant catalog is small
+// and not necessarily kept sorted by ID after edits, so a simple linear scan
+// is the correct and honest choice here rather than re-implementing sorting
+// just to justify a second Binary Search.)
+int searchRestaurantByID(Restaurant catalog[], int count, int targetID) {
+    for (int i = 0; i < count; i++) {
+        if (catalog[i].getRestaurantID() == targetID) {
+            return i;   // index found
+        }
+    }
+    return -1;   // not found
+}
+
+// ===== MEMBER 3 (ADDED): SEARCH RECORD REQUIREMENT (BY NAME, CASE-SENSITIVE) =====
+// A second search variant: searching by restaurant NAME instead of ID.
+// Demonstrates that "Search Record" can be implemented on more than one field,
+// which satisfies the "2 search criteria" style requirement for this module.
+int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
+    for (int i = 0; i < count; i++) {
+        if (catalog[i].getName() == targetName) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 // ==========================================
@@ -797,6 +925,136 @@ int loadRestaurants(Restaurant catalog[], int maxSize) {
     inFile.close();
     cout << "[System] Loaded " << count << " restaurant(s) from Restaurants.txt.\n";
     return count;
+}
+
+// ===== MEMBER 3 (ADDED): SAVE RECORD TO FILE (DATA PERSISTENCE) =====
+// The original version of this module could only LOAD Restaurants.txt at
+// startup -- any new or edited restaurant only existed in memory and was
+// lost the moment the program closed. This function writes the WHOLE
+// in-memory catalog array back to Restaurants.txt using the exact same
+// 6-line-per-record format that loadRestaurants() expects, so the file
+// stays compatible with the loader on the next run.
+void saveRestaurants(Restaurant catalog[], int count) {
+    ofstream outFile("Restaurants.txt");
+    if (!outFile) {
+        cout << "[!] Could not open Restaurants.txt for writing.\n";
+        return;
+    }
+    for (int i = 0; i < count; i++) {
+        outFile << catalog[i].getRestaurantID() << "\n";
+        outFile << catalog[i].getName() << "\n";
+        outFile << catalog[i].getCuisineType() << "\n";
+        outFile << catalog[i].getBasePrice() << "\n";
+        outFile << catalog[i].getPromoCode() << "\n";
+        outFile << catalog[i].getPromoDiscountPercent() << "\n";
+    }
+    outFile.close();
+    cout << "[System] " << count << " restaurant(s) saved to Restaurants.txt.\n";
+}
+
+// ===== MEMBER 3 (ADDED): ADD NEW RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// Allows the Admin to add a brand new restaurant to the catalog at runtime,
+// instead of only ever being able to view restaurants that existed in the
+// .txt file at startup. Demonstrates array bounds checking (MAX_RESTAURANTS)
+// and duplicate-ID prevention, wrapped in try/catch per the project rubric.
+void addRestaurant(Restaurant catalog[], int &count, int maxSize) {
+    try {
+        if (count >= maxSize) throw "Restaurant catalog is full. Cannot add more.";
+
+        int newID;
+        cout << "Enter new Restaurant ID: ";
+        if (!(cin >> newID)) throw "Invalid Restaurant ID. Must be numeric.";
+
+        if (searchRestaurantByID(catalog, count, newID) != -1) {
+            throw "A restaurant with this ID already exists.";
+        }
+
+        string newName, newCuisine, newPromo;
+        double newPrice, newDiscount;
+
+        cin.ignore(10000, '\n');
+        cout << "Enter Restaurant Name: ";
+        getline(cin, newName);
+        cout << "Enter Cuisine Type: ";
+        getline(cin, newCuisine);
+        cout << "Enter Base Price: ";
+        cin >> newPrice;
+        cin.ignore(10000, '\n');
+        cout << "Enter Promo Code (or NONE): ";
+        getline(cin, newPromo);
+        cout << "Enter Promo Discount Percent (0 if NONE): ";
+        cin >> newDiscount;
+
+        catalog[count] = Restaurant(newID, newName, newCuisine, newPrice, newPromo, newDiscount);
+        count++;
+        cout << "[System] Restaurant \"" << newName << "\" added to the catalog.\n";
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
+}
+
+// ===== MEMBER 3 (ADDED): EDIT/UPDATE RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// Lets the Admin update an existing restaurant's details (name, cuisine,
+// price, promo code, promo discount) by ID. Before this, the Restaurant
+// class only had getters, so the catalog was effectively read-only after
+// loading -- this closes that gap and satisfies the "Edit/Update Record"
+// functional requirement for the Restaurant module specifically.
+void editRestaurant(Restaurant catalog[], int count) {
+    try {
+        int targetID;
+        cout << "Enter Restaurant ID to edit: ";
+        if (!(cin >> targetID)) throw "Invalid Restaurant ID. Must be numeric.";
+
+        int idx = searchRestaurantByID(catalog, count, targetID);
+        if (idx == -1) throw "Restaurant ID not found in the catalog.";
+
+        cout << "Editing: ";
+        displayRestaurantInfo(catalog[idx]);
+
+        int field;
+        cout << "What do you want to edit?\n";
+        cout << "  1. Name\n";
+        cout << "  2. Cuisine Type\n";
+        cout << "  3. Base Price\n";
+        cout << "  4. Promo Code\n";
+        cout << "  5. Promo Discount Percent\n";
+        cout << "Enter choice: ";
+        if (!(cin >> field)) throw "Invalid menu choice.";
+
+        cin.ignore(10000, '\n');
+        if (field == 1) {
+            string newName;
+            cout << "Enter new Name: ";
+            getline(cin, newName);
+            catalog[idx].setName(newName);
+        } else if (field == 2) {
+            string newCuisine;
+            cout << "Enter new Cuisine Type: ";
+            getline(cin, newCuisine);
+            catalog[idx].setCuisineType(newCuisine);
+        } else if (field == 3) {
+            double newPrice;
+            cout << "Enter new Base Price: ";
+            cin >> newPrice;
+            catalog[idx].setBasePrice(newPrice);
+        } else if (field == 4) {
+            string newPromo;
+            cout << "Enter new Promo Code: ";
+            getline(cin, newPromo);
+            catalog[idx].setPromoCode(newPromo);
+        } else if (field == 5) {
+            double newDiscount;
+            cout << "Enter new Promo Discount Percent: ";
+            cin >> newDiscount;
+            catalog[idx].setPromoDiscountPercent(newDiscount);
+        } else {
+            throw "Invalid field choice.";
+        }
+
+        cout << "[System] Restaurant ID " << targetID << " updated successfully.\n";
+    } catch (const char* msg) {
+        cout << "[!] " << msg << "\n";
+    }
 }
 
 // ==========================================
@@ -929,7 +1187,7 @@ int main() {
 
     int choice = 0;
 
-    while (choice != 16) {
+    while (choice != 24) {
         cout << "\n[ MAIN MENU ]\n";
         cout << "1. Add a Standard Order\n";
         cout << "2. Add a VIP Priority Order\n";
@@ -946,7 +1204,15 @@ int main() {
         cout << "13. Place New Order (Join Pending Dispatch Line)\n";
         cout << "14. Dispatch Next Order (Serve Queue Front)\n";
         cout << "15. View Pending Dispatch Line\n";
-        cout << "16. Save and Exit\n";
+        cout << "16. Add a New Restaurant\n";
+        cout << "17. Edit a Restaurant\n";
+        cout << "18. Search Restaurant by ID\n";
+        cout << "19. Search Restaurant by Name\n";
+        cout << "20. Save Restaurant Catalog to File\n";
+        cout << "21. Preview Next Order in Dispatch Line\n";
+        cout << "22. Check an Order's Position in Dispatch Line\n";
+        cout << "23. Cancel a Pending Order (Before Dispatch)\n";
+        cout << "24. Save and Exit\n";
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -1063,8 +1329,67 @@ int main() {
         } else if (choice == 15) {
             pendingLine.displayQueue();
 
+        // ===== MEMBER 3 (ADDED): RESTAURANT CRUD + EXTRA QUEUE OPERATIONS =====
         } else if (choice == 16) {
+            addRestaurant(restaurantCatalog, restaurantCount, MAX_RESTAURANTS);
+
+        } else if (choice == 17) {
+            editRestaurant(restaurantCatalog, restaurantCount);
+
+        } else if (choice == 18) {
+            int searchID;
+            cout << "Enter Restaurant ID to search: ";
+            cin >> searchID;
+            int idx = searchRestaurantByID(restaurantCatalog, restaurantCount, searchID);
+            if (idx == -1) {
+                cout << "[!] Restaurant ID " << searchID << " not found.\n";
+            } else {
+                displayRestaurantInfo(restaurantCatalog[idx]);
+            }
+
+        } else if (choice == 19) {
+            string searchName;
+            cin.ignore(10000, '\n');
+            cout << "Enter Restaurant Name to search: ";
+            getline(cin, searchName);
+            int idx = searchRestaurantByName(restaurantCatalog, restaurantCount, searchName);
+            if (idx == -1) {
+                cout << "[!] Restaurant \"" << searchName << "\" not found.\n";
+            } else {
+                displayRestaurantInfo(restaurantCatalog[idx]);
+            }
+
+        } else if (choice == 20) {
+            saveRestaurants(restaurantCatalog, restaurantCount);
+
+        } else if (choice == 21) {
+            DeliveryOrder* nextUp = pendingLine.peekFront();
+            if (nextUp != NULL) {
+                cout << "\n[Preview] Next order to be dispatched:\n";
+                nextUp->displayOrder();
+            }
+
+        } else if (choice == 22) {
+            int checkID;
+            cout << "Enter Order ID to check its position in the dispatch line: ";
+            cin >> checkID;
+            int pos = pendingLine.findPosition(checkID);
+            if (pos == -1) {
+                cout << "[!] Order ID " << checkID << " is not currently in the dispatch line.\n";
+            } else {
+                cout << "[Queue] Order ID " << checkID << " is currently at position " << pos
+                     << " of " << pendingLine.getSize() << " in the dispatch line.\n";
+            }
+
+        } else if (choice == 23) {
+            int cancelID;
+            cout << "Enter Order ID to cancel from the dispatch line: ";
+            cin >> cancelID;
+            pendingLine.cancelByID(cancelID);
+
+        } else if (choice == 24) {
             activeList.saveToFile();
+            saveRestaurants(restaurantCatalog, restaurantCount);
             cout << "Exiting system. Data successfully saved. Goodbye!\n";
         } else {
             cout << "[!] Invalid choice.\n";
