@@ -885,7 +885,7 @@ int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
 // PromoCode  (use NONE if there isn't one)
 // PromoDiscountPercent
 
-const int MAX_RESTAURANTS = 20;
+const int MAX_RESTAURANTS = 60;   // raised from 20 to comfortably hold the 50-record catalog
 
 int loadRestaurants(Restaurant catalog[], int maxSize) {
     ifstream inFile("Restaurants.txt");

@@ -28,3 +28,273 @@ Japanese
 28.50
 VIP20
 20
+106
+Warung Pak Su
+Malay
+10.90
+NONE
+0
+107
+Kim's Korean BBQ
+Korean
+26.00
+KOREA15
+15
+108
+Bangkok Street Eats
+Thai
+17.50
+NONE
+0
+109
+Lotus Vegetarian Kitchen
+Chinese
+14.20
+VEGGIE10
+10
+110
+Mama Mia Pasta House
+Western
+21.90
+NONE
+0
+111
+Banana Leaf Delight
+Indian
+13.80
+SAVE5
+5
+112
+Teppanyaki Express
+Japanese
+30.00
+NONE
+0
+113
+Char Kuey Teow Corner
+Chinese
+11.50
+NONE
+0
+114
+Roti Canai Avenue
+Malay
+8.90
+PROMO10
+10
+115
+Tandoori House
+Indian
+19.50
+NONE
+0
+116
+Burger Barn
+Western
+16.90
+BURGER5
+5
+117
+Pho Real Vietnamese
+Vietnamese
+15.80
+NONE
+0
+118
+Dim Sum Palace
+Chinese
+20.50
+NONE
+0
+119
+Satay Station
+Malay
+14.00
+SAVE5
+5
+120
+Ramen Ichiban
+Japanese
+24.90
+RAMEN10
+10
+121
+Curry Laksa Hub
+Malay
+12.90
+NONE
+0
+122
+Spicy Szechuan
+Chinese
+19.90
+NONE
+0
+123
+Mediterranean Grill
+Western
+23.50
+NONE
+0
+124
+Bollywood Biryani
+Indian
+17.90
+SAVE5
+5
+125
+Sushi Mentai
+Japanese
+27.80
+NONE
+0
+126
+Hokkien Mee House
+Chinese
+13.20
+NONE
+0
+127
+Western Grill Co
+Western
+25.90
+GRILL10
+10
+128
+Punjabi Tandoor
+Indian
+18.50
+NONE
+0
+129
+Pasta Italiano
+Western
+20.90
+PASTA10
+10
+130
+Nasi Kandar Pelita
+Malay
+11.90
+NONE
+0
+131
+Korean Fried Chicken Hub
+Korean
+21.50
+NONE
+0
+132
+Taco Fiesta
+Mexican
+16.50
+TACO5
+5
+133
+Pad Thai Paradise
+Thai
+15.20
+NONE
+0
+134
+Steamboat Empire
+Chinese
+29.00
+NONE
+0
+135
+Mee Goreng Mamak
+Malay
+9.90
+NONE
+0
+136
+Chicken Rice Classic
+Chinese
+10.50
+NONE
+0
+137
+Greek Gyro House
+Mediterranean
+18.90
+GYRO5
+5
+138
+Vietnamese Pho House
+Vietnamese
+16.20
+NONE
+0
+139
+Naan & Curry Co
+Indian
+16.90
+NONE
+0
+140
+Wagyu Steakhouse
+Western
+45.00
+STEAK10
+10
+141
+Sup Tulang Station
+Malay
+13.50
+NONE
+0
+142
+Yakitori Yard
+Japanese
+22.50
+NONE
+0
+143
+Hot Pot House
+Chinese
+27.00
+NONE
+0
+144
+Burrito Bandito
+Mexican
+17.80
+NONE
+0
+145
+Som Tam Thai Kitchen
+Thai
+14.50
+SAVE5
+5
+146
+Dosa Junction
+Indian
+12.50
+NONE
+0
+147
+BBQ Pork Ribs Co
+Western
+24.50
+NONE
+0
+148
+Mala Hot Pot
+Chinese
+23.90
+MALA10
+10
+149
+Kuih & Kopitiam
+Malay
+7.50
+NONE
+0
+150
+Bibimbap Bowl
+Korean
+19.90
+NONE
+0git
