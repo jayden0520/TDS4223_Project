@@ -128,7 +128,7 @@ public:
 };
 
 // ==========================================
-// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) - ? FIXED
+// 2B. MEMBER 3: RESTAURANT CLASS (CATALOG) 
 // ==========================================
 
 class Restaurant {
@@ -156,10 +156,7 @@ public:
         promoDiscountPercent = discount;
     }
 
-    // ? FIX 1: ADDED DESTRUCTOR
-    ~Restaurant() {
-        // No dynamic memory to free
-    }
+    ~Restaurant() {}
 
     int getRestaurantID() const { return restaurantID; }
     string getName() const { return name; }
@@ -168,30 +165,37 @@ public:
     string getPromoCode() const { return promoCode; }
     double getPromoDiscountPercent() const { return promoDiscountPercent; }
 
-    // ===== MEMBER 3 (ADDED): SETTERS FOR EDIT/UPDATE RECORD REQUIREMENT =====
-    // The original version of this class was read-only after loading from file.
-    // These setters allow an Admin to edit an existing catalog entry instead of
-    // only being able to view it (Restaurant catalog had no Edit feature before).
     void setName(string newName) { name = newName; }
     void setCuisineType(string newCuisine) { cuisineType = newCuisine; }
     void setBasePrice(double newPrice) { basePrice = newPrice; }
     void setPromoCode(string newPromo) { promoCode = newPromo; }
     void setPromoDiscountPercent(double newDiscount) { promoDiscountPercent = newDiscount; }
 
-    // ===== FRIEND FUNCTIONS (MEMBER 3) =====
-    // Both functions need direct access to Restaurant's private promo fields.
+    // ===== 4 FRIEND FUNCTIONS (MEMBER 3) =====
+    // 1. Display restaurant details directly using private variables
     friend void displayRestaurantInfo(const Restaurant& r);
+    
+    // 2. Apply a promo code by directly accessing the private discount fields
     friend double applyPromoCode(const Restaurant& r, string enteredCode);
+    
+    // 3. Compare two restaurants to see which is cheaper directly using private base prices
+    friend bool isCheaper(const Restaurant& r1, const Restaurant& r2);
+    
+    // 4. Check if a restaurant serves a specific cuisine directly using private cuisineType
+    friend bool servesCuisine(const Restaurant& r, string targetCuisine);
 };
 
-// Friend function: prints catalog info, including private fields directly.
+// ---------------------------------------------------------
+// FRIEND FUNCTION IMPLEMENTATIONS
+// ---------------------------------------------------------
+
+// 1. Friend function: prints catalog info, including private fields directly.
 void displayRestaurantInfo(const Restaurant& r) {
     cout << "[" << r.restaurantID << "] " << r.name
          << " (" << r.cuisineType << ") - Base Price: RM" << r.basePrice << "\n";
 }
 
-// Friend function: checks the entered code against the restaurant's PRIVATE promo
-// fields directly (no getter needed, since it is a friend) and returns the final price.
+// 2. Friend function: checks the entered code against the restaurant's PRIVATE promo fields
 double applyPromoCode(const Restaurant& r, string enteredCode) {
     if (enteredCode != "" && enteredCode == r.promoCode) {
         double discountAmount = r.basePrice * (r.promoDiscountPercent / 100.0);
@@ -200,6 +204,18 @@ double applyPromoCode(const Restaurant& r, string enteredCode) {
     }
     cout << "[Promo] No valid promo code applied. Full price charged.\n";
     return r.basePrice;
+}
+
+// 3. Friend function: Compare prices directly
+bool isCheaper(const Restaurant& r1, const Restaurant& r2) {
+    // Directly accesses the private basePrice of both objects
+    return r1.basePrice < r2.basePrice; 
+}
+
+// 4. Friend function: Check cuisine match directly
+bool servesCuisine(const Restaurant& r, string targetCuisine) {
+    // Directly accesses the private cuisineType
+    return r.cuisineType == targetCuisine; 
 }
 
 // ==========================================
@@ -258,7 +274,7 @@ public:
 };
 
 // ==========================================
-// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) - ? FIXED
+// 3B. MEMBER 3: LINKED QUEUE (PENDING DISPATCH LINE) 
 // ==========================================
 
 struct PendingNode {
@@ -282,7 +298,7 @@ public:
     bool isEmpty();
     int getSize();
 
-    // ===== MEMBER 3 (ADDED): EXTRA LINKED QUEUE OPERATIONS =====
+    // ===== MEMBER 3 : EXTRA LINKED QUEUE OPERATIONS =====
     DeliveryOrder* peekFront();                 // look at the next order WITHOUT removing it
     int findPosition(int orderID);              // 1-based position of an Order ID in the line, -1 if absent
     bool cancelByID(int orderID);                // remove a SPECIFIC node from the middle of the queue
@@ -683,7 +699,7 @@ void UndoStack::viewHistory() {
 }
 
 // ==========================================
-// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION - ? FIXED
+// 5B. MEMBER 3: LINKED QUEUE IMPLEMENTATION  
 // ==========================================
 
 PendingQueue::~PendingQueue() {
@@ -750,7 +766,7 @@ void PendingQueue::displayQueue() {
     uiRule();
 }
 
-// ===== MEMBER 3 (ADDED): peekFront() =====
+// ===== MEMBER 3 : peekFront() =====
 // Lets the Admin preview which order is next in line WITHOUT dequeuing it.
 // This is different from dequeue(), which permanently removes the front node.
 // Demonstrates that a Linked Queue can be "read" non-destructively, not just
@@ -763,7 +779,7 @@ DeliveryOrder* PendingQueue::peekFront() {
     return front->data;
 }
 
-// ===== MEMBER 3 (ADDED): findPosition() =====
+// ===== MEMBER 3 : findPosition() =====
 // Traverses the queue from front to rear and returns the 1-based position of
 // a given Order ID, or -1 if it is not currently waiting in line. This is a
 // simple linear search over the Linked Queue (separate from Member 4's Binary
@@ -781,7 +797,7 @@ int PendingQueue::findPosition(int orderID) {
     return -1;   // not found anywhere in the line
 }
 
-// ===== MEMBER 3 (ADDED): cancelByID() =====
+// ===== MEMBER 3 : cancelByID() =====
 // Removes a SPECIFIC order from anywhere in the queue, not just the front.
 // dequeue() can only serve the front node (true FIFO behaviour), but real
 // customers sometimes need to cancel an order while it is still waiting in
@@ -833,7 +849,7 @@ bool PendingQueue::cancelByID(int orderID) {
 }
 
 // ==========================================
-// 5C. MEMBER 3: OVERLOADED FUNCTIONS - ? FIXED (Added try-catch)
+// 5C. MEMBER 3: OVERLOADED FUNCTIONS 
 // ==========================================
 
 // Overload 1: calculate price with NO promo code involved.
@@ -870,7 +886,7 @@ void displayMenu(Restaurant catalog[], int count, string cuisineFilter) {
     uiRule();
 }
 
-// ===== MEMBER 3 (ADDED): SEARCH RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// ===== MEMBER 3 : SEARCH RECORD REQUIREMENT (RESTAURANT MODULE) =====
 // Linear search through the fixed-size catalog array by Restaurant ID.
 // (A Binary Search is not used here on purpose -- Member 4 already owns the
 // Binary Search requirement for Orders, and the restaurant catalog is small
@@ -886,7 +902,7 @@ int searchRestaurantByID(Restaurant catalog[], int count, int targetID) {
     return -1;   // not found
 }
 
-// ===== MEMBER 3 (ADDED): SEARCH RECORD REQUIREMENT (BY NAME, CASE-SENSITIVE) =====
+// ===== MEMBER 3 : SEARCH RECORD REQUIREMENT (BY NAME, CASE-SENSITIVE) =====
 // A second search variant: searching by restaurant NAME instead of ID.
 // Demonstrates that "Search Record" can be implemented on more than one field,
 // which satisfies the "2 search criteria" style requirement for this module.
@@ -900,7 +916,7 @@ int searchRestaurantByName(Restaurant catalog[], int count, string targetName) {
 }
 
 // ==========================================
-// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER - ? FIXED (Added try-catch)
+// 5D. MEMBER 3: RESTAURANTS.TXT CATALOG LOADER 
 // ==========================================
 // File format (6 lines per restaurant, no STL containers - fixed array only):
 // ID
@@ -952,7 +968,7 @@ int loadRestaurants(Restaurant catalog[], int maxSize) {
     return count;
 }
 
-// ===== MEMBER 3 (ADDED): SAVE RECORD TO FILE (DATA PERSISTENCE) =====
+// ===== MEMBER 3 : SAVE RECORD TO FILE (DATA PERSISTENCE) =====
 // The original version of this module could only LOAD Restaurants.txt at
 // startup -- any new or edited restaurant only existed in memory and was
 // lost the moment the program closed. This function writes the WHOLE
@@ -977,7 +993,7 @@ void saveRestaurants(Restaurant catalog[], int count) {
     cout << "[System] " << count << " restaurant(s) saved to Restaurants.txt.\n";
 }
 
-// ===== MEMBER 3 (ADDED): ADD NEW RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// ===== MEMBER 3 : ADD NEW RECORD REQUIREMENT (RESTAURANT MODULE) =====
 // Allows the Admin to add a brand new restaurant to the catalog at runtime,
 // instead of only ever being able to view restaurants that existed in the
 // .txt file at startup. Demonstrates array bounds checking (MAX_RESTAURANTS)
@@ -1018,7 +1034,7 @@ void addRestaurant(Restaurant catalog[], int &count, int maxSize) {
     }
 }
 
-// ===== MEMBER 3 (ADDED): EDIT/UPDATE RECORD REQUIREMENT (RESTAURANT MODULE) =====
+// ===== MEMBER 3 : EDIT/UPDATE RECORD REQUIREMENT (RESTAURANT MODULE) =====
 // Lets the Admin update an existing restaurant's details (name, cuisine,
 // price, promo code, promo discount) by ID. Before this, the Restaurant
 // class only had getters, so the catalog was effectively read-only after
@@ -1083,7 +1099,7 @@ void editRestaurant(Restaurant catalog[], int count) {
 }
 
 // ==========================================
-// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) - ? FIXED (Added try-catch)
+// 5E. MEMBER 3: PLACE ORDER / DISPATCH (LINKED QUEUE WORKFLOW) 
 // ==========================================
 
 // Forward declaration: readInt() is fully defined later in Member 4's section,
@@ -1374,7 +1390,7 @@ int main() {
         } else if (choice == 15) {
             pendingLine.displayQueue();
 
-        // ===== MEMBER 3 (ADDED): RESTAURANT CRUD + EXTRA QUEUE OPERATIONS =====
+        // ===== MEMBER 3 : RESTAURANT CRUD + EXTRA QUEUE OPERATIONS =====
         } else if (choice == 16) {
             addRestaurant(restaurantCatalog, restaurantCount, MAX_RESTAURANTS);
 
