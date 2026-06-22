@@ -1679,6 +1679,7 @@ void ActiveOrderList::generateSummaryReport() {
         int totalTime = 0;                     // sum of every delivery time
         int vipCount = 0;                      // how many VIP orders
         int pending = 0, outForDelivery = 0, delivered = 0, cancelled = 0;   // status tallies
+        int pendingDispatch = 0, other = 0;
 
         OrderNode* temp = head;                // start at the head
         while (temp != NULL) {                 // visit every order once
@@ -1691,6 +1692,8 @@ void ActiveOrderList::generateSummaryReport() {
             else if (st == "Out for Delivery") outForDelivery++;
             else if (st == "Delivered") delivered++;
             else if (st == "Cancelled") cancelled++;
+            else if (st == "Pending Dispatch") pendingDispatch++;
+            else other++;
 
             temp = temp->next;                 // move to the next order
         }
@@ -1732,6 +1735,10 @@ void ActiveOrderList::generateSummaryReport() {
         outFile << "  Out for Delivery : " << outForDelivery << "\n";
         outFile << "  Delivered        : " << delivered << "\n";
         outFile << "  Cancelled        : " << cancelled << "\n";
+        outFile << "  Pending Dispatch : " << pendingDispatch << "\n";
+        outFile << "  Other            : " << other << "\n";
+        outFile << "  (Total accounted): " << (pending + outForDelivery + delivered
+                    + cancelled + pendingDispatch + other) << " / " << n << "\n";
         outFile << "---------------------------------------------\n";
         outFile << "Highest Value Order : #" << topID << " (RM" << topValue << ")\n";
         outFile << "Longest Delivery    : #" << longID << " (" << longTime << " mins)\n";
