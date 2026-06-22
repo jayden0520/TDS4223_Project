@@ -4,6 +4,8 @@
 
 using namespace std;
 
+string trimLine(string s);            // strips trailing \r / whitespace from a file line
+
 // ==========================================================================
 // 0. SHARED UI DESIGN TOOLKIT  (forward declarations)
 //    Defined in full inside Section 8. Declared here so EVERY section
@@ -612,10 +614,10 @@ void ActiveOrderList::loadFromFile() {
         inFile >> day >> month >> year;
         inFile >> time;
         inFile >> ws; 
-        getline(inFile, status);
-        getline(inFile, rider);
-        getline(inFile, street);
-        getline(inFile, city);
+        getline(inFile, status);  status = trimLine(status);
+        getline(inFile, rider);   rider  = trimLine(rider);
+        getline(inFile, street);  street = trimLine(street);
+        getline(inFile, city);    city   = trimLine(city);
 
         Date d = {day, month, year};
         Address a = {street, city};
@@ -945,11 +947,11 @@ int loadRestaurants(Restaurant catalog[], int maxSize) {
             string name, cuisine, promo;
             double price = 0.0, discount = 0.0;
 
-            getline(inFile, name);             // line 2: Name
-            getline(inFile, cuisine);          // line 3: Cuisine
+            getline(inFile, name);    name = trimLine(name);       // line 2: Name
+            getline(inFile, cuisine); cuisine = trimLine(cuisine);  // line 3: Cuisine
             getline(inFile, line);
             price = stod(line);                // line 4: Base Price
-            getline(inFile, promo);            // line 5: Promo Code
+            getline(inFile, promo);   promo = trimLine(promo);      // line 5: Promo Code
             getline(inFile, line);
             discount = stod(line);             // line 6: Promo Discount %
 
@@ -1659,7 +1661,7 @@ void ActiveOrderList::displaySavedSummary() {
         uiTitle("RETRIEVED FROM Summary.txt");
         string line;                           // holds one line at a time
         while (getline(inFile, line)) {        // read the file line by line
-            cout << line << "\n";              // echo each saved line to the screen
+            cout << trimLine(line) << "\n";    // echo each saved line (CRLF-safe)
         }
         inFile.close();                        // close the file handle
     } catch (const char* msg) {
@@ -2115,10 +2117,10 @@ string readNonEmptyField(string prompt) {
 
 void bubbleSortUsers(User** arr, int n) {
     int i = 0;
-    bool sorted = false;      // assume the array is NOT sorted yet
+    bool sorted = false;    
 
     while (i < n && sorted == false) {
-        sorted = true;               // hope no swaps are needed on this pass
+        sorted = true;              
         for (int j = 0; j < n - i - 1; j++) {
               // C++ compares strings letter by letter, so "alice" < "bob", etc.
             if (arr[j]->getUsername() > arr[j + 1]->getUsername()) {
@@ -2170,6 +2172,36 @@ int binarySearchUser(User** arr, int n, string targetUsername) {
 // --------------------------------------------------------------------------
 
 // Reads one account file into the shared array, building the correct object.
+// Removes trailing carriage-return '\r' (from Windows \r\n files) and any stray
+// spaces/tabs, so a username read from disk matches exactly what the user types
+// at login. Without this, "demo01\r" != "demo01" and login says "not found".
+string trimLine(string s) {
+    while (!s.empty() && (s.back() == '\r' || s.back() == '\n' ||
+                          s.back() == ' '  || s.back() == '\t')) {
+        s.pop_back();
+    }
+    return s;
+}
+
+// If 'filename' exists, is non-empty, and its last character is NOT a newline,
+// this appends a single '\n'. It guarantees the next appended record starts on
+// its own line, so registering never glues a new account onto the previous one.
+void ensureTrailingNewline(string filename) {
+    ifstream in(filename, ios::binary | ios::ate);   // open at end of file
+    if (!in) return;                                 // no file yet -> nothing to fix
+    streampos size = in.tellg();
+    if (size <= 0) { in.close(); return; }           // empty file -> fine as-is
+    in.seekg(-1, ios::end);                          // step back to the last byte
+    char lastChar = '\n';
+    in.get(lastChar);
+    in.close();
+    if (lastChar != '\n') {                          // last line had no newline
+        ofstream fix(filename, ios::app);
+        fix << "\n";                                 // add the missing line break
+        fix.close();
+    }
+}
+
 int loadUsersFromFile(string filename, string role, User** arr, int startIndex, int maxSize) {
     ifstream inFile(filename);
     if (!inFile) {
@@ -2180,14 +2212,18 @@ int loadUsersFromFile(string filename, string role, User** arr, int startIndex, 
     string uname, phash, field3, field4;
 
     while (count < maxSize && getline(inFile, uname)) {
+        uname = trimLine(uname);                 // strip \r / spaces
         if (uname == "") continue;               // skip blank separator lines
         if (!getline(inFile, phash)) break;     // password hash
+        phash = trimLine(phash);
         if (!getline(inFile, field3)) break;    // staffID (admin) / phone (customer)
+        field3 = trimLine(field3);
 
         if (role == "Admin") {
             arr[count] = new Admin(uname, phash, field3);         // dynamic memory
         } else {
             if (!getline(inFile, field4)) break;                   // address (customer)
+            field4 = trimLine(field4);
             arr[count] = new Customer(uname, phash, field3, field4);
         }
         count++;
@@ -2242,6 +2278,7 @@ void seedDefaultAdmin() {
         return;             // accounts already exist, nothing to seed
     }
 
+    ensureTrailingNewline("Users.txt");
     ofstream outFile("Users.txt", ios::app);
     if (!outFile) {
         return;
@@ -2283,6 +2320,7 @@ void registerCustomer() {
         string phone = readNonEmptyField("Enter Phone Number: ");
         string addr  = readNonEmptyField("Enter Delivery Address: ");
 
+        ensureTrailingNewline("Customers.txt");
         ofstream outFile("Customers.txt", ios::app);
         if (!outFile) {
             throw "Could not open Customers.txt for writing.";
@@ -2331,6 +2369,7 @@ void registerAdmin() {
         string pwd     = readNonEmptyField("Choose a Password: ");
         string staffID = readNonEmptyField("Enter Staff ID (e.g. S002): ");
 
+        ensureTrailingNewline("Users.txt");
         ofstream outFile("Users.txt", ios::app);     // append, keep old records
         if (!outFile) {
             throw "Could not open Users.txt for writing.";
@@ -2425,10 +2464,10 @@ string findOrderOwner(int targetID) {
     string nameLine, streetLine, cityLine;
     while (in >> id) {
         in.ignore(10000, '\n');     // finish the ID line
-        getline(in, nameLine);      // username
+        getline(in, nameLine);   nameLine   = trimLine(nameLine);    // username
         in >> price; in.ignore(10000, '\n');
-        getline(in, streetLine);    // street
-        getline(in, cityLine);      // city
+        getline(in, streetLine); streetLine = trimLine(streetLine);  // street
+        getline(in, cityLine);   cityLine   = trimLine(cityLine);    // city
         if (id == targetID) {
             owner = nameLine;       // remember the most recent match
         }
@@ -2454,10 +2493,10 @@ void removeOrderOwner(int targetID) {
     string nameLine, streetLine, cityLine;
     while (keepCount < MAX_USERS && in >> id) {
         in.ignore(10000, '\n');
-        getline(in, nameLine);
+        getline(in, nameLine);   nameLine   = trimLine(nameLine);
         in >> price; in.ignore(10000, '\n');
-        getline(in, streetLine);
-        getline(in, cityLine);
+        getline(in, streetLine); streetLine = trimLine(streetLine);
+        getline(in, cityLine);   cityLine   = trimLine(cityLine);
         if (id != targetID) {                  // keep everything except the target
             keepIDs[keepCount]     = id;
             keepNames[keepCount]   = nameLine;
@@ -2510,7 +2549,7 @@ string getOrderStatusFromFile(int targetID) {
 
     while (in >> id) {
         in >> vip >> price >> day >> month >> year >> time >> ws;
-        getline(in, status);
+        getline(in, status);  status = trimLine(status);
         getline(in, rider);
         getline(in, street);
         getline(in, city);
@@ -2614,10 +2653,10 @@ void trackMyOrders(string username, ActiveOrderList &activeList) {
 
     while (in >> id) {
         in.ignore(10000, '\n');
-        getline(in, owner);                       
+        getline(in, owner);  owner = trimLine(owner);
         in >> price; in.ignore(10000, '\n');      
-        getline(in, street);                      
-        getline(in, city);                        
+        getline(in, street); street = trimLine(street);
+        getline(in, city);   city = trimLine(city);
 
         if (owner != username) continue;          
 
